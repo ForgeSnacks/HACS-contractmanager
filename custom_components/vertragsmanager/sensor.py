@@ -1,4 +1,4 @@
-"""Sensoren fuer Vertragsmanager."""
+"""Sensoren für Vertragsmanager."""
 from __future__ import annotations
 
 from datetime import date, timedelta
@@ -46,7 +46,7 @@ def _calc_next_renewal(start: date, duration_months: int, today: date) -> date:
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Sensor fuer diesen Vertrag anlegen + Gesamtkosten-Sensor aktualisieren/anlegen."""
+    """Sensor für diesen Vertrag anlegen + Gesamtkosten-Sensor aktualisieren/anlegen."""
     data = {**entry.data, **entry.options}
     async_add_entities([VertragSensor(entry, data)])
 
@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class VertragSensor(SensorEntity):
-    """Repraesentiert einen einzelnen Vertrag."""
+    """Repräsentiert einen einzelnen Vertrag."""
 
     _attr_icon = "mdi:file-document-outline"
     _attr_native_unit_of_measurement = "Tage"
@@ -83,7 +83,7 @@ class VertragSensor(SensorEntity):
         renewal = _calc_next_renewal(start, int(self._data[CONF_DURATION_MONTHS]), today)
         deadline = renewal - timedelta(days=int(self._data[CONF_NOTICE_DAYS]))
         monthly_cost = float(self._data[CONF_COST])
-        if self._data[CONF_CYCLE] == "jaehrlich":
+        if self._data[CONF_CYCLE] == "jährlich":
             monthly_cost = monthly_cost / 12
         return {
             "kategorie": self._data.get(CONF_CATEGORY),
@@ -92,16 +92,16 @@ class VertragSensor(SensorEntity):
             "zyklus": self._data.get(CONF_CYCLE),
             "monatliche_kosten": round(monthly_cost, 2),
             "vertragsstart": self._data.get(CONF_START_DATE),
-            "kuendigungsfrist_tage": self._data.get(CONF_NOTICE_DAYS),
+            "kündigungsfrist_tage": self._data.get(CONF_NOTICE_DAYS),
             "laufzeit_monate": self._data.get(CONF_DURATION_MONTHS),
-            "naechste_verlaengerung": renewal.isoformat(),
-            "kuendigungsfrist_datum": deadline.isoformat(),
-            "automatische_verlaengerung": self._data.get(CONF_AUTO_RENEW),
+            "nächste_verlängerung": renewal.isoformat(),
+            "kündigungsfrist_datum": deadline.isoformat(),
+            "automatische_verlängerung": self._data.get(CONF_AUTO_RENEW),
         }
 
 
 class GesamtkostenSensor(SensorEntity):
-    """Aggregiert die monatlichen Kosten aller Vertraege."""
+    """Aggregiert die monatlichen Kosten aller Verträge."""
 
     _attr_icon = "mdi:cash-multiple"
     _attr_native_unit_of_measurement = "EUR"
@@ -119,16 +119,16 @@ class GesamtkostenSensor(SensorEntity):
             if not data:
                 continue
             cost = float(data.get(CONF_COST, 0))
-            if data.get(CONF_CYCLE) == "jaehrlich":
+            if data.get(CONF_CYCLE) == "jährlich":
                 cost = cost / 12
             total += cost
         return round(total, 2)
 
     @property
     def extra_state_attributes(self):
-        vertraege = []
+        verträge = []
         for entry in self._hass.config_entries.async_entries(DOMAIN):
             data = {**entry.data, **entry.options}
             if data:
-                vertraege.append(data.get(CONF_NAME))
-        return {"anzahl_vertraege": len(vertraege), "vertraege": vertraege}
+                verträge.append(data.get(CONF_NAME))
+        return {"anzahl_verträge": len(verträge), "verträge": verträge}

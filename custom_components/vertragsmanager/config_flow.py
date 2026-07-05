@@ -1,4 +1,4 @@
-"""Config Flow fuer Vertragsmanager."""
+"""Config Flow für Vertragsmanager."""
 from __future__ import annotations
 
 import voluptuous as vol

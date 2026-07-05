@@ -10,9 +10,9 @@
           "cost": "Kosten pro Zyklus",
           "cycle": "Zahlungszyklus",
           "start_date": "Vertragsstart (JJJJ-MM-TT)",
-          "notice_days": "Kuendigungsfrist (Tage)",
+          "notice_days": "Kündigungsfrist (Tage)",
           "duration_months": "Laufzeit (Monate)",
-          "auto_renew": "Automatische Verlaengerung"
+          "auto_renew": "Automatische Verlängerung"
         }
       }
     },
@@ -30,9 +30,9 @@
           "cost": "Kosten pro Zyklus",
           "cycle": "Zahlungszyklus",
           "start_date": "Vertragsstart (JJJJ-MM-TT)",
-          "notice_days": "Kuendigungsfrist (Tage)",
+          "notice_days": "Kündigungsfrist (Tage)",
           "duration_months": "Laufzeit (Monate)",
-          "auto_renew": "Automatische Verlaengerung"
+          "auto_renew": "Automatische Verlängerung"
         }
       }
     }

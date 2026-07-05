@@ -1,4 +1,4 @@
-"""Konstanten fuer Vertragsmanager."""
+"""Konstanten für Vertragsmanager."""
 
 DOMAIN = "vertragsmanager"
 
@@ -23,6 +23,6 @@ CATEGORIES = [
     "Sonstiges",
 ]
 
-CYCLES = ["monatlich", "jaehrlich"]
+CYCLES = ["monatlich", "jährlich"]
 
 PLATFORMS = ["sensor"]
