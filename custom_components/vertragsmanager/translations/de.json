@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Neuen Vertrag anlegen",
+        "data": {
+          "name": "Name des Vertrags",
+          "category": "Kategorie",
+          "provider": "Anbieter",
+          "cost": "Kosten pro Zyklus",
+          "cycle": "Zahlungszyklus",
+          "start_date": "Vertragsstart (JJJJ-MM-TT)",
+          "notice_days": "Kuendigungsfrist (Tage)",
+          "duration_months": "Laufzeit (Monate)",
+          "auto_renew": "Automatische Verlaengerung"
+        }
+      }
+    },
+    "error": {
+      "invalid_date": "Bitte Datum im Format JJJJ-MM-TT eingeben"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Vertrag bearbeiten",
+        "data": {
+          "category": "Kategorie",
+          "provider": "Anbieter",
+          "cost": "Kosten pro Zyklus",
+          "cycle": "Zahlungszyklus",
+          "start_date": "Vertragsstart (JJJJ-MM-TT)",
+          "notice_days": "Kuendigungsfrist (Tage)",
+          "duration_months": "Laufzeit (Monate)",
+          "auto_renew": "Automatische Verlaengerung"
+        }
+      }
+    }
+  }
+}

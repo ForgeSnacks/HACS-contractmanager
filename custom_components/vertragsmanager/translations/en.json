@@ -1,0 +1,40 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add new contract",
+        "data": {
+          "name": "Contract name",
+          "category": "Category",
+          "provider": "Provider",
+          "cost": "Cost per cycle",
+          "cycle": "Billing cycle",
+          "start_date": "Contract start (YYYY-MM-DD)",
+          "notice_days": "Notice period (days)",
+          "duration_months": "Duration (months)",
+          "auto_renew": "Auto-renew"
+        }
+      }
+    },
+    "error": {
+      "invalid_date": "Please use date format YYYY-MM-DD"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit contract",
+        "data": {
+          "category": "Category",
+          "provider": "Provider",
+          "cost": "Cost per cycle",
+          "cycle": "Billing cycle",
+          "start_date": "Contract start (YYYY-MM-DD)",
+          "notice_days": "Notice period (days)",
+          "duration_months": "Duration (months)",
+          "auto_renew": "Auto-renew"
+        }
+      }
+    }
+  }
+}

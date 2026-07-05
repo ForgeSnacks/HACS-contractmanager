@@ -1,0 +1,11 @@
+{
+  "domain": "vertragsmanager",
+  "name": "Vertragsmanager",
+  "codeowners": ["@ForgeSnacks"],
+  "config_flow": true,
+  "documentation": "https://github.com/ForgeSnacks/HACS-contractmanager",
+  "issue_tracker": "https://github.com/ForgeSnacks/HACS-contractmanager/issues",
+  "iot_class": "calculated",
+  "requirements": [],
+  "version": "0.1.0"
+}
