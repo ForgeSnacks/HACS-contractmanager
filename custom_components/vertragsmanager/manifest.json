@@ -1,12 +1,14 @@
 {
-  "domain": "vertragsmanager",
-  "name": "Vertragsmanager",
   "codeowners": ["@ForgeSnacks"],
   "config_flow": true,
+  "dependencies": ["frontend", "http"],
   "documentation": "https://github.com/ForgeSnacks/HACS-contractmanager",
-  "issue_tracker": "https://github.com/ForgeSnacks/HACS-contractmanager/issues",
+  "domain": "vertragsmanager",
+  "homeassistant": "2024.1.0",
+  "integration_type": "hub",
   "iot_class": "calculated",
+  "issue_tracker": "https://github.com/ForgeSnacks/HACS-contractmanager/issues",
+  "name": "Vertragsmanager",
   "requirements": [],
-  "version": "0.4.3",
-  "dependencies": ["frontend", "http"]
+  "version": "0.4.3"
 }
