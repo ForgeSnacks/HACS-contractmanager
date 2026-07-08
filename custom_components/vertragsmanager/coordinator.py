@@ -107,12 +107,14 @@ class VertragsmanagerData:
         """Holt einen Vertrag per ID."""
         return self.contracts.get(entry_id)
 
-    def get_sorted_contracts(self, today: date) -> list[tuple[VertragData, date, date]]:
+    def get_sorted_contracts(
+        self, today: date
+    ) -> list[tuple[VertragData, date, date]]:
         """
         Gibt alle Verträge sortiert nach Kündigungsfrist zurück.
         Return: List of (VertragData, renewal_date, deadline_date)
         """
-        result = []
+        result: list[tuple[VertragData, date, date]] = []
         for contract in self.contracts.values():
             start = date.fromisoformat(contract.start_date)
             renewal = _calc_next_renewal(start, contract.duration_months, today)
@@ -132,8 +134,10 @@ class VertragsmanagerCoordinator(DataUpdateCoordinator[VertragsmanagerData]):
         )
         self.data = VertragsmanagerData()
 
-    def update_contract(self, entry_id: str, data: dict) -> None:
+    def update_contract(self, entry_id: str, data: dict[str, Any]) -> None:
         """Aktualisiert oder fügt einen Vertrag hinzu."""
+        from typing import Any
+
         contract = VertragData(
             entry_id=entry_id,
             name=data[CONF_NAME],

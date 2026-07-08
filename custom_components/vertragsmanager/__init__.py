@@ -125,7 +125,7 @@ async def _register_panel(hass: HomeAssistant) -> None:
                 "name": PANEL_NAME,
                 "embed_iframe": False,
                 "trust_external": False,
-                "js_url": f"{PANEL_JS_URL}?v=0.5.0&page={default_page}",
+                "js_url": f"{PANEL_JS_URL}?v=0.6.0&page={default_page}",
             }
         },
         require_admin=False,

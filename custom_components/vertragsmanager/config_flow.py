@@ -1,6 +1,8 @@
 """Config Flow für Vertragsmanager."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -36,7 +38,8 @@ from .const import (
 )
 
 
-def _build_user_schema(user_input=None):
+def _build_user_schema(user_input: dict[str, Any] | None = None) -> vol.Schema:
+    """Build user config schema."""
     user_input = user_input or {}
 
     return vol.Schema(
@@ -76,7 +79,8 @@ def _build_user_schema(user_input=None):
     )
 
 
-def _build_options_schema(current):
+def _build_options_schema(current: dict[str, Any]) -> vol.Schema:
+    """Build options config schema."""
     return vol.Schema(
         {
             vol.Required(
@@ -131,7 +135,10 @@ class VertragsmanagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """User step."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
@@ -155,17 +162,21 @@ class VertragsmanagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: config_entries.ConfigEntry) -> config_entries.OptionsFlow:
+        """Get options flow."""
         return VertragsmanagerOptionsFlow(config_entry)
 
 
 class VertragsmanagerOptionsFlow(config_entries.OptionsFlow):
     """Erlaubt das Bearbeiten eines bestehenden Vertrags und der Panel-Optionen."""
 
-    def __init__(self, config_entry) -> None:
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Options step."""
         current = {**self.config_entry.data, **self.config_entry.options}
         errors: dict[str, str] = {}
 

@@ -1,33 +1,34 @@
 """Konstanten für Vertragsmanager."""
+from typing import Final
 
-DOMAIN = "vertragsmanager"
+DOMAIN: Final = "vertragsmanager"
 
-CONF_NAME = "name"
-CONF_CATEGORY = "category"
-CONF_PROVIDER = "provider"
-CONF_COST = "cost"
-CONF_CYCLE = "cycle"
-CONF_START_DATE = "start_date"
-CONF_NOTICE_DAYS = "notice_days"
-CONF_DURATION_MONTHS = "duration_months"
-CONF_AUTO_RENEW = "auto_renew"
+CONF_NAME: Final = "name"
+CONF_CATEGORY: Final = "category"
+CONF_PROVIDER: Final = "provider"
+CONF_COST: Final = "cost"
+CONF_CYCLE: Final = "cycle"
+CONF_START_DATE: Final = "start_date"
+CONF_NOTICE_DAYS: Final = "notice_days"
+CONF_DURATION_MONTHS: Final = "duration_months"
+CONF_AUTO_RENEW: Final = "auto_renew"
 
-CONF_CONTRACT_NUMBER = "contract_number"
-CONF_CUSTOMER_NUMBER = "customer_number"
-CONF_NOTICE_PERIOD_TEXT = "notice_period_text"
-CONF_PAYMENT_DAY = "payment_day"
-CONF_NOTES = "notes"
-CONF_PORTAL_URL = "portal_url"
-CONF_EMAIL = "email"
-CONF_PHONE = "phone"
+CONF_CONTRACT_NUMBER: Final = "contract_number"
+CONF_CUSTOMER_NUMBER: Final = "customer_number"
+CONF_NOTICE_PERIOD_TEXT: Final = "notice_period_text"
+CONF_PAYMENT_DAY: Final = "payment_day"
+CONF_NOTES: Final = "notes"
+CONF_PORTAL_URL: Final = "portal_url"
+CONF_EMAIL: Final = "email"
+CONF_PHONE: Final = "phone"
 
-CONF_SHOW_IN_SIDEBAR = "show_in_sidebar"
-CONF_DEFAULT_PAGE = "default_page"
+CONF_SHOW_IN_SIDEBAR: Final = "show_in_sidebar"
+CONF_DEFAULT_PAGE: Final = "default_page"
 
-DEFAULT_SHOW_IN_SIDEBAR = True
-DEFAULT_PAGE = "overview"
+DEFAULT_SHOW_IN_SIDEBAR: Final = True
+DEFAULT_PAGE: Final = "overview"
 
-CATEGORIES = [
+CATEGORIES: Final[list[str]] = [
     "Handy",
     "Strom",
     "Gas",
@@ -40,9 +41,9 @@ CATEGORIES = [
     "Sonstiges",
 ]
 
-CYCLES = ["monatlich", "jährlich"]
+CYCLES: Final[list[str]] = ["monatlich", "jährlich"]
 
-PAGES = [
+PAGES: Final[list[dict[str, str]]] = [
     {"label": "Übersicht", "value": "overview"},
     {"label": "Alle Verträge", "value": "contracts"},
     {"label": "Kosten", "value": "costs"},
@@ -50,11 +51,11 @@ PAGES = [
     {"label": "Vertrag hinzufügen", "value": "add"}
 ]
 
-PLATFORMS = ["sensor"]
+PLATFORMS: Final[list[str]] = ["sensor"]
 
-PANEL_URL_PATH = "vertragsmanager"
-PANEL_TITLE = "Vertragsmanager"
-PANEL_ICON = "mdi:file-document-multiple-outline"
-PANEL_COMPONENT_NAME = "custom"
-PANEL_NAME = "vertragsmanager-panel"
-PANEL_JS_URL = "/api/vertragsmanager/frontend/panel.js"
+PANEL_URL_PATH: Final = "vertragsmanager"
+PANEL_TITLE: Final = "Vertragsmanager"
+PANEL_ICON: Final = "mdi:file-document-multiple-outline"
+PANEL_COMPONENT_NAME: Final = "custom"
+PANEL_NAME: Final = "vertragsmanager-panel"
+PANEL_JS_URL: Final = "/api/vertragsmanager/frontend/panel.js"

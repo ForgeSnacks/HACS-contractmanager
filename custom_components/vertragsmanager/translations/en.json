@@ -54,5 +54,21 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "vertrag": {
+        "name": "Cancellation Period"
+      },
+      "gesamtkosten": {
+        "name": "Total Costs"
+      }
+    }
+  },
+  "device": {
+    "contract": {
+      "name": "Contract"
+    }
   }
 }
+
