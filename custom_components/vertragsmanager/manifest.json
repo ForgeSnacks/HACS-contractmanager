@@ -9,6 +9,6 @@
   "iot_class": "calculated",
   "issue_tracker": "https://github.com/ForgeSnacks/HACS-contractmanager/issues",
   "requirements": [],
-  "version": "0.6.0"
+  "version": "0.6.1"
 }
 
