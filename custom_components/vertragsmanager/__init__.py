@@ -174,7 +174,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Daten aus Config Entry in Coordinator laden
     data = {**entry.data, **entry.options}
     coordinator.update_contract(entry.entry_id, data)
-    coordinator.async_refresh()
 
     # Runtime data im Entry speichern
     entry.runtime_data = VertragsmanagerRuntimeData(coordinator=coordinator)
@@ -227,7 +226,6 @@ async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None
     if coordinator:
         data = {**entry.data, **entry.options}
         coordinator.update_contract(entry.entry_id, data)
-        coordinator.async_refresh()
 
     await hass.config_entries.async_reload(entry.entry_id)
     await _register_panel(hass, entry)
@@ -238,7 +236,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = hass.data.get(COORDINATOR_KEY)
     if coordinator:
         coordinator.remove_contract(entry.entry_id)
-        coordinator.async_refresh()
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

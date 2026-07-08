@@ -163,11 +163,11 @@ class VertragsmanagerCoordinator(DataUpdateCoordinator[VertragsmanagerData]):
             phone=data.get(CONF_PHONE, ""),
         )
         self.data.contracts[entry_id] = contract
+        # Daten sofort aktualisieren
+        self.async_set_updated_data(self.data)
 
     def remove_contract(self, entry_id: str) -> None:
         """Entfernt einen Vertrag."""
         self.data.contracts.pop(entry_id, None)
-
-    def async_refresh(self) -> None:
-        """Triggert manuelles Refresh."""
+        # Daten sofort aktualisieren
         self.async_set_updated_data(self.data)
