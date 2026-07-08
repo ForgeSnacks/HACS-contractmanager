@@ -280,34 +280,6 @@ class VertragsmanagerPanel extends HTMLElement {
     `;
   }
 
-  renderAddForm() {
-    return `
-      <div class="card">
-        <h3>Vertrag hinzufügen</h3>
-        <form id="contract-form">
-          <div class="grid">
-            <label>Name<input name="name" required></label>
-            <label>Anbieter<input name="provider"></label>
-            <label>Kategorie<input name="category"></label>
-            <label>Kosten<input name="cost" type="number" step="0.01" required></label>
-            <label>Zyklus<select name="cycle"><option value="monatlich">monatlich</option><option value="jährlich">jährlich</option></select></label>
-            <label>Startdatum<input name="start_date" type="date" required></label>
-          </div>
-          <div class="grid">
-            <label>Laufzeit Monate<input name="duration_months" type="number" min="1" required></label>
-            <label>Kündigungsfrist Tage<input name="notice_days" type="number" min="0" required></label>
-            <label>Automatisch verlängern<select name="auto_renew"><option value="ja">ja</option><option value="nein">nein</option></select></label>
-            <label>Vertragsnummer<input name="contract_number"></label>
-            <label>Kundennummer<input name="customer_number"></label>
-            <label>Zahlungstag<input name="payment_day" type="number" min="1" max="31"></label>
-          </div>
-          <button type="submit">Speichern</button>
-        </form>
-        <p class="hint">Das Formular ist wieder aktiv; die tatsächliche Speicherung muss an deinen bestehenden Setup-Handler angebunden sein.</p>
-      </div>
-    `;
-  }
-
   renderDeadlines(contracts) {
     return `
       <div class="card">
@@ -333,7 +305,13 @@ class VertragsmanagerPanel extends HTMLElement {
     if (this._page === "contracts") content = this.renderContracts(contracts);
     if (this._page === "costs") content = this.renderCosts(contracts);
     if (this._page === "deadlines") content = this.renderDeadlines(contracts);
-    if (this._page === "add") content = this.renderAddForm();
+    if (this._page === "add") content = `
+      <div class="card">
+        <h3>Vertrag / HUB hinzufügen</h3>
+        <p class="hint">Öffnet den Home-Assistant-Setup-Assistenten für Vertragsmanager.</p>
+        <a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=vertragsmanager" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 14px;border-radius:10px;background:var(--primary-color);color:white;text-decoration:none;">Hinzufügen</a>
+      </div>
+    `;
     this.querySelector("#content").innerHTML = content;
   }
 }
