@@ -76,7 +76,7 @@ class VertragsmanagerPanel extends HTMLElement {
         }
         .bar-row {
           display: grid;
-          grid-template-columns: 180px 1fr 80px;
+          grid-template-columns: 180px 1fr 120px;
           gap: 12px;
           align-items: center;
           margin-bottom: 10px;
@@ -156,28 +156,51 @@ class VertragsmanagerPanel extends HTMLElement {
     });
   }
 
+  _isPrimaryContractSensor(state) {
+    return state.entity_id.startsWith("sensor.vertragsmanager_") && state.entity_id.endsWith("_frist") && state.attributes.deadline_date;
+  }
+
+  _contractKeyFromState(state) {
+    return state.entity_id
+      .replace(/^sensor\.vertragsmanager_/, "")
+      .replace(/_frist$/, "");
+  }
+
+  _allContractStates() {
+    return Object.values(this._hass.states).filter((state) => state.entity_id.startsWith("sensor.vertragsmanager_"));
+  }
+
+  _findStateBySuffix(contractKey, suffix) {
+    return this._allContractStates().find((state) => state.entity_id === `sensor.vertragsmanager_${contractKey}_${suffix}`);
+  }
+
   contracts() {
     return Object.values(this._hass.states)
-      .filter((state) => 
-        (state.entity_id.startsWith("sensor.vertragsmanager_") || 
-         (state.entity_id.startsWith("sensor.") && state.entity_id.endsWith("_frist"))) &&
-        state.attributes.deadline_date
-      )
-      .map((state) => ({
-        entity_id: state.entity_id,
-        name: state.attributes.friendly_name || state.entity_id.replace("sensor.vertragsmanager_", "").replace("_frist", "").replace(/_/g, " "),
-        provider: state.attributes.provider || "",
-        category: state.attributes.category || "",
-        cost: Number(state.attributes.monthly_cost || 0),
-        deadlineDays: Number(state.state || 0),
-        deadlineDate: state.attributes.deadline_date || "",
-        renewalDate: state.attributes.next_renewal || "",
-      }))
+      .filter((state) => this._isPrimaryContractSensor(state))
+      .map((state) => {
+        const contractKey = this._contractKeyFromState(state);
+        const monthly = this._findStateBySuffix(contractKey, "monatskosten");
+        const paid = this._findStateBySuffix(contractKey, "gezahlt");
+        const remaining = this._findStateBySuffix(contractKey, "zahlen");
+        return {
+          entity_id: state.entity_id,
+          key: contractKey,
+          name: state.attributes.friendly_name || contractKey.replace(/_/g, " "),
+          provider: state.attributes.provider || "",
+          category: state.attributes.category || "",
+          monthlyCost: Number(monthly?.state || state.attributes.monthly_cost || 0),
+          paidCost: Number(paid?.state || 0),
+          remainingCost: Number(remaining?.state || 0),
+          deadlineDays: Number(state.state || 0),
+          deadlineDate: state.attributes.deadline_date || "",
+          renewalDate: state.attributes.next_renewal || "",
+        };
+      })
       .sort((a, b) => a.deadlineDays - b.deadlineDays);
   }
 
   summary(contracts) {
-    const total = contracts.reduce((sum, item) => sum + item.cost, 0);
+    const total = contracts.reduce((sum, item) => sum + item.monthlyCost, 0);
     const urgent = contracts.filter((item) => item.deadlineDays <= 30).length;
     const next = contracts.length ? contracts[0] : null;
     return { total, urgent, next };
@@ -186,7 +209,7 @@ class VertragsmanagerPanel extends HTMLElement {
   groupByCategory(contracts) {
     const grouped = {};
     for (const item of contracts) {
-      grouped[item.category] = (grouped[item.category] || 0) + item.cost;
+      grouped[item.category] = (grouped[item.category] || 0) + item.monthlyCost;
     }
     return Object.entries(grouped)
       .map(([name, value]) => ({ name, value }))
@@ -208,15 +231,13 @@ class VertragsmanagerPanel extends HTMLElement {
   pieChart(items) {
     if (!items.length) return `<p class="hint">Noch keine Daten vorhanden.</p>`;
     const total = items.reduce((sum, item) => sum + item.value, 0);
-    const colors = [
-      '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
-      '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#64748b'
-    ];
+    const colors = ["#3b82f6", "#ef4444", "#10b981", "#f59e0b", "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16", "#f97316", "#64748b"];
     let cumulative = 0;
     const segments = items.map((item, idx) => {
-      const percentage = (item.value / total) * 100;
+      const value = Number(item.value || 0);
+      const percentage = (value / total) * 100;
       const startAngle = (cumulative / total) * 360;
-      cumulative += item.value;
+      cumulative += value;
       const endAngle = (cumulative / total) * 360;
       const largeArc = percentage > 50 ? 1 : 0;
       const x1 = Math.cos(Math.PI * startAngle / 180) * 100;
@@ -224,18 +245,16 @@ class VertragsmanagerPanel extends HTMLElement {
       const x2 = Math.cos(Math.PI * endAngle / 180) * 100;
       const y2 = Math.sin(Math.PI * endAngle / 180) * 100;
       const d = `M 0 0 L ${x1} ${y1} A 100 100 0 ${largeArc} 1 ${x2} ${y2} Z`;
-      return `<path d="${d}" fill="${colors[idx % colors.length]}" stroke="white" stroke-width="2">
-        <title>${item.name}: ${item.value.toFixed(2)} € (${percentage.toFixed(1)}%)</title>
-      </path>`;
+      return `<path d="${d}" fill="${colors[idx % colors.length]}" stroke="white" stroke-width="2"><title>${item.name}: ${value.toFixed(2)} € (${percentage.toFixed(1)}%)</title></path>`;
     }).join("");
     return `
       <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
-        <svg viewBox="-100 -100 200 200" width="200" height="200">${segments}</svg>
+        <svg viewBox="-100 -100 200 200" width="220" height="220">${segments}</svg>
         <div>
           ${items.map((item, idx) => `
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
               <div style="width:12px; height:12px; background:${colors[idx % colors.length]}; border-radius:2px;"></div>
-              <span>${item.name}: ${item.value.toFixed(2)} €</span>
+              <span>${item.name}: ${Number(item.value).toFixed(2)} €</span>
             </div>
           `).join("")}
         </div>
@@ -245,7 +264,7 @@ class VertragsmanagerPanel extends HTMLElement {
 
   renderOverview(contracts) {
     const summary = this.summary(contracts);
-    const costByContract = contracts.map((item) => ({ name: item.name, value: item.cost }));
+    const costByContract = contracts.map((item) => ({ name: item.name, value: item.monthlyCost }));
     const costByCategory = this.groupByCategory(contracts);
 
     return `
@@ -253,7 +272,7 @@ class VertragsmanagerPanel extends HTMLElement {
         <div class="card"><h3>Verträge</h3><div class="value">${contracts.length}</div></div>
         <div class="card"><h3>Gesamtkosten / Monat</h3><div class="value">${summary.total.toFixed(2)} €</div></div>
         <div class="card"><h3>Fristen ≤ 30 Tage</h3><div class="value">${summary.urgent}</div></div>
-        <div class="card"><h3>Nächste Frist</h3><div class="value">${summary.next ? `${summary.next.deadlineDays} Tage` : "-"}</div></div>
+        <div class="card"><h3>Nächste Frist</h3><div class="value">${summary.next ? `${Math.round(summary.next.deadlineDays)} Tage` : "-"}</div></div>
       </div>
       <div class="split">
         <div class="card">
@@ -289,6 +308,8 @@ class VertragsmanagerPanel extends HTMLElement {
               <th>Anbieter</th>
               <th>Kategorie</th>
               <th>Monatlich</th>
+              <th>Bereits gezahlt</th>
+              <th>Noch zu zahlen</th>
               <th>Kündigung in</th>
               <th>Fristdatum</th>
             </tr>
@@ -299,8 +320,10 @@ class VertragsmanagerPanel extends HTMLElement {
                 <td>${item.name}</td>
                 <td>${item.provider}</td>
                 <td>${item.category}</td>
-                <td>${item.cost.toFixed(2)} €</td>
-                <td>${item.deadlineDays} Tage</td>
+                <td>${item.monthlyCost.toFixed(2)} €</td>
+                <td>${item.paidCost.toFixed(2)} €</td>
+                <td>${item.remainingCost.toFixed(2)} €</td>
+                <td>${Math.round(item.deadlineDays)} Tage</td>
                 <td>${item.deadlineDate}</td>
               </tr>
             `).join("")}
@@ -311,7 +334,7 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 
   renderCosts(contracts) {
-    const costByContract = contracts.map((item) => ({ name: item.name, value: item.cost }));
+    const costByContract = contracts.map((item) => ({ name: item.name, value: item.monthlyCost }));
     const costByCategory = this.groupByCategory(contracts);
 
     return `
@@ -336,7 +359,7 @@ class VertragsmanagerPanel extends HTMLElement {
           <div class="bar-row">
             <div>${item.name}</div>
             <div class="bar"><div style="width:${Math.max(3, Math.min(100, ((365 - item.deadlineDays) / 365) * 100))}%"></div></div>
-            <div>${item.deadlineDays} T</div>
+            <div>${Math.round(item.deadlineDays)} T</div>
           </div>
         `).join("") : `<p class="hint">Noch keine Fristen vorhanden.</p>`}
       </div>
@@ -400,7 +423,7 @@ class VertragsmanagerPanel extends HTMLElement {
       event.preventDefault();
       const result = this.querySelector("#result");
       const data = Object.fromEntries(new FormData(form).entries());
-      data.auto_renew = form.querySelector('[name="auto_renew"]').checked;
+      data.auto_renew = form.querySelector('[name=\"auto_renew\"]').checked;
       data.cost = Number(data.cost || 0);
       data.notice_days = Number(data.notice_days || 0);
       data.duration_months = Number(data.duration_months || 0);
@@ -443,7 +466,6 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 }
 
-// Verhindern, dass Panel doppelt registriert wird
 if (!customElements.get("vertragsmanager-panel")) {
   customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
 }
