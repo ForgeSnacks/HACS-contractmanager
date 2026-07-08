@@ -2,11 +2,10 @@
 from __future__ import annotations
 
 from datetime import date
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, PropertyMock
 
 from custom_components.vertragsmanager.coordinator import (
     VertragData,
-    VertragsmanagerCoordinator,
     VertragsmanagerData,
     _add_months,
     _calc_deadline,
@@ -58,13 +57,25 @@ def test_vertrag_data_monthly_cost_yearly() -> None:
 
 def test_coordinator_update_contract() -> None:
     """Test updating contract in coordinator (mocked hass)."""
-    # Mock hass object with required attributes
+    # Mock hass object with all required attributes for DataUpdateCoordinator
     hass_mock = MagicMock()
     hass_mock.data = {}
     hass_mock.loop = MagicMock()
     hass_mock.async_add_executor_job = MagicMock()
     hass_mock.async_create_task = MagicMock()
+    hass_mock.config = MagicMock()
+    hass_mock.states = MagicMock()
+    hass_mock.services = MagicMock()
+    hass_mock.helpers = MagicMock()
+    hass_mock.http = MagicMock()
+    
+    # Mock logger
+    import logging
+    hass_mock.logger = logging.getLogger(__name__)
 
+    # Mock the async_track_time_interval method
+    hass_mock.async_add_job = MagicMock()
+    
     coordinator = VertragsmanagerCoordinator(hass_mock)  # type: ignore
 
     contract_data = {
