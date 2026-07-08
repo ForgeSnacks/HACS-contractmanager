@@ -44,6 +44,8 @@ from .const import (
     PLATFORMS,
 )
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 SERVICE_CREATE_CONTRACT = "create_contract"
 STATIC_FRONTEND_PATH = "/api/vertragsmanager/frontend"
 STATIC_REGISTERED_KEY = f"{DOMAIN}_static_registered"
@@ -123,7 +125,7 @@ async def _register_panel(hass: HomeAssistant) -> None:
                 "name": PANEL_NAME,
                 "embed_iframe": False,
                 "trust_external": False,
-                "js_url": f"{PANEL_JS_URL}?v=0.4.1&page={default_page}",
+                "js_url": f"{PANEL_JS_URL}?v=0.4.3&page={default_page}",
             }
         },
         require_admin=False,
