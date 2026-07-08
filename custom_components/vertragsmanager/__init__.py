@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 from datetime import date
+from pathlib import Path
 
 import voluptuous as vol
 
 from homeassistant.components import frontend
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -33,7 +35,9 @@ from .const import (
     DEFAULT_PAGE,
     DEFAULT_SHOW_IN_SIDEBAR,
     DOMAIN,
+    PANEL_COMPONENT_NAME,
     PANEL_ICON,
+    PANEL_JS_URL,
     PANEL_NAME,
     PANEL_TITLE,
     PANEL_URL_PATH,
@@ -41,7 +45,9 @@ from .const import (
 )
 
 SERVICE_CREATE_CONTRACT = "create_contract"
-
+STATIC_FRONTEND_PATH = "/api/vertragsmanager/frontend"
+STATIC_REGISTERED_KEY = f"{DOMAIN}_static_registered"
+PANEL_REGISTERED_KEY = f"{DOMAIN}_panel_registered"
 
 CREATE_CONTRACT_SCHEMA = vol.Schema(
     {
@@ -66,15 +72,49 @@ CREATE_CONTRACT_SCHEMA = vol.Schema(
 )
 
 
-async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Registriert das Frontend-Panel."""
-    options = entry.options or {}
+async def _ensure_static_path(hass: HomeAssistant) -> None:
+    """Statische Frontend-Dateien registrieren."""
+    if hass.data.get(STATIC_REGISTERED_KEY):
+        return
+
+    frontend_dir = Path(__file__).parent / "frontend"
+
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                STATIC_FRONTEND_PATH,
+                str(frontend_dir),
+                cache_headers=False,
+            )
+        ]
+    )
+
+    hass.data[STATIC_REGISTERED_KEY] = True
+
+
+def _remove_panel_if_exists(hass: HomeAssistant) -> None:
+    """Bereits vorhandenes Panel entfernen."""
+    panels = hass.data.get("frontend_panels")
+    if panels and PANEL_URL_PATH in panels:
+        panels.pop(PANEL_URL_PATH, None)
+
+
+async def _register_panel(hass: HomeAssistant) -> None:
+    """Panel anhand des ersten Config Entries registrieren."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    if not entries:
+        return
+
+    primary_entry = entries[0]
+    options = primary_entry.options or {}
     show_in_sidebar = options.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR)
     default_page = options.get(CONF_DEFAULT_PAGE, DEFAULT_PAGE)
 
+    _remove_panel_if_exists(hass)
+
     frontend.async_register_built_in_panel(
         hass,
-        component_name="custom",
+        component_name=PANEL_COMPONENT_NAME,
         sidebar_title=PANEL_TITLE if show_in_sidebar else None,
         sidebar_icon=PANEL_ICON if show_in_sidebar else None,
         frontend_url_path=PANEL_URL_PATH,
@@ -83,44 +123,45 @@ async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 "name": PANEL_NAME,
                 "embed_iframe": False,
                 "trust_external": False,
-                "js_url": f"/api/vertragsmanager/panel.js?page={default_page}",
+                "js_url": f"{PANEL_JS_URL}?v=0.4.0&page={default_page}",
             }
         },
         require_admin=False,
     )
 
-
-async def _unregister_panel(hass: HomeAssistant) -> None:
-    """Versucht vorhandenes Panel zu entfernen."""
-    panels = hass.data.get("frontend_panels")
-    if panels and PANEL_URL_PATH in panels:
-        panels.pop(PANEL_URL_PATH, None)
+    hass.data[PANEL_REGISTERED_KEY] = True
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Set up Vertragsmanager."""
+    """Globale Initialisierung."""
     hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up a Vertragsmanager config entry (= ein Vertrag)."""
+    """Ein Vertrags-Config-Entry."""
     hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = entry.data
+    hass.data[DOMAIN][entry.entry_id] = {**entry.data, **entry.options}
+
+    await _ensure_static_path(hass)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_update_listener))
 
     if not hass.services.has_service(DOMAIN, SERVICE_CREATE_CONTRACT):
+
         async def handle_create_contract(call: ServiceCall) -> None:
             data = dict(call.data)
             date.fromisoformat(data[CONF_START_DATE])
 
-            await hass.config_entries.flow.async_init(
+            result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": "user"},
                 data=data,
             )
+
+            if result["type"] != "create_entry":
+                raise ValueError(f"Vertrag konnte nicht angelegt werden: {result}")
 
         hass.services.async_register(
             DOMAIN,
@@ -129,30 +170,31 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             schema=CREATE_CONTRACT_SCHEMA,
         )
 
-    if not hass.data.get(f"{DOMAIN}_panel_registered"):
-        await _register_panel(hass, entry)
-        hass.data[f"{DOMAIN}_panel_registered"] = True
-
+    await _register_panel(hass)
     return True
 
 
 async def async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Bei Optionsänderung neu laden."""
-    await _unregister_panel(hass)
-    hass.data[f"{DOMAIN}_panel_registered"] = False
+    """Bei Optionen: Entry neu laden und Panel neu registrieren."""
     await hass.config_entries.async_reload(entry.entry_id)
+    await _register_panel(hass)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Config entry entladen."""
+    """Entry entladen."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id, None)
 
-    if not hass.config_entries.async_entries(DOMAIN):
+    remaining = hass.config_entries.async_entries(DOMAIN)
+
+    if not remaining:
         if hass.services.has_service(DOMAIN, SERVICE_CREATE_CONTRACT):
             hass.services.async_remove(DOMAIN, SERVICE_CREATE_CONTRACT)
-        await _unregister_panel(hass)
-        hass.data[f"{DOMAIN}_panel_registered"] = False
+        _remove_panel_if_exists(hass)
+        hass.data[PANEL_REGISTERED_KEY] = False
+    else:
+        await _register_panel(hass)
 
     return unload_ok

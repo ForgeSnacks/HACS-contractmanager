@@ -4,9 +4,7 @@ create_contract:
   fields:
     name:
       name: Vertragsname
-      description: Anzeigename des Vertrags.
       required: true
-      example: Glasfaser 600 mit MagentaTV MegaStream
       selector:
         text:
     category:

@@ -36,14 +36,6 @@ from .const import (
 )
 
 
-def _text(default=vol.UNDEFINED):
-    return selector.TextSelector(
-        selector.TextSelectorConfig(
-            type=selector.TextSelectorType.TEXT,
-        )
-    ), default
-
-
 def _build_user_schema(user_input=None):
     user_input = user_input or {}
 
@@ -168,7 +160,7 @@ class VertragsmanagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class VertragsmanagerOptionsFlow(config_entries.OptionsFlow):
-    """Erlaubt das Bearbeiten eines bestehenden Vertrags und Panel-Optionen."""
+    """Erlaubt das Bearbeiten eines bestehenden Vertrags und der Panel-Optionen."""
 
     def __init__(self, config_entry) -> None:
         self.config_entry = config_entry

@@ -47,7 +47,7 @@ PAGES = [
     {"label": "Alle Verträge", "value": "contracts"},
     {"label": "Kosten", "value": "costs"},
     {"label": "Fristen", "value": "deadlines"},
-    {"label": "Vertrag hinzufügen", "value": "add"},
+    {"label": "Vertrag hinzufügen", "value": "add"}
 ]
 
 PLATFORMS = ["sensor"]
@@ -55,4 +55,6 @@ PLATFORMS = ["sensor"]
 PANEL_URL_PATH = "vertragsmanager"
 PANEL_TITLE = "Vertragsmanager"
 PANEL_ICON = "mdi:file-document-multiple-outline"
+PANEL_COMPONENT_NAME = "custom"
 PANEL_NAME = "vertragsmanager-panel"
+PANEL_JS_URL = "/api/vertragsmanager/frontend/panel.js"
