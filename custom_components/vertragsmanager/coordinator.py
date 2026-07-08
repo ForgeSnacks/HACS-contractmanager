@@ -1,8 +1,8 @@
-"""DataUpdateCoordinator für Vertragsmanager."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date, timedelta
+from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -103,7 +103,6 @@ class VertragsmanagerData:
         """Anzahl der Verträge."""
         return len(self.contracts)
 
-    def get_contract(self, entry_id: str) -> VertragData | None:
         """Holt einen Vertrag per ID."""
         return self.contracts.get(entry_id)
 
@@ -136,8 +135,6 @@ class VertragsmanagerCoordinator(DataUpdateCoordinator[VertragsmanagerData]):
 
     def update_contract(self, entry_id: str, data: dict[str, Any]) -> None:
         """Aktualisiert oder fügt einen Vertrag hinzu."""
-        from typing import Any
-
         contract = VertragData(
             entry_id=entry_id,
             name=data[CONF_NAME],
@@ -167,3 +164,4 @@ class VertragsmanagerCoordinator(DataUpdateCoordinator[VertragsmanagerData]):
     def async_refresh(self) -> None:
         """Triggert manuelles Refresh."""
         self.async_set_updated_data(self.data)
+

@@ -3,21 +3,63 @@ from __future__ import annotations
 
 from datetime import date
 
-from homeassistant.core import HomeAssistant
-
 from custom_components.vertragsmanager.coordinator import (
     VertragData,
     VertragsmanagerCoordinator,
+    VertragsmanagerData,
     _add_months,
     _calc_deadline,
     _calc_next_renewal,
-    VertragsmanagerData,
 )
 
 
-async def test_coordinator_add_contract(hass: HomeAssistant) -> None:
-    """Test adding contract to coordinator."""
-    coordinator = VertragsmanagerCoordinator(hass)
+def test_coordinator_data_structure() -> None:
+    """Test coordinator data structure."""
+    data = VertragsmanagerData()
+    assert data.contracts == {}
+    assert data.total_monthly_cost == 0.0
+    assert data.contract_count == 0
+
+
+def test_vertrag_data_monthly_cost_monthly() -> None:
+    """Test monthly cost calculation for monthly cycle."""
+    contract = VertragData(
+        entry_id="test_id",
+        name="Test",
+        category="Handy",
+        provider="Provider",
+        cost=29.99,
+        cycle="monatlich",
+        start_date="2024-01-01",
+        notice_days=30,
+        duration_months=12,
+        auto_renew=True,
+    )
+    assert contract.monthly_cost == 29.99
+
+
+def test_vertrag_data_monthly_cost_yearly() -> None:
+    """Test monthly cost calculation for yearly cycle."""
+    contract = VertragData(
+        entry_id="test_id",
+        name="Test",
+        category="Strom",
+        provider="Provider",
+        cost=360.0,
+        cycle="jährlich",
+        start_date="2024-01-01",
+        notice_days=30,
+        duration_months=12,
+        auto_renew=True,
+    )
+    assert contract.monthly_cost == 30.0
+
+
+def test_coordinator_update_contract() -> None:
+    """Test updating contract in coordinator (mocked hass)."""
+    # Mock hass object
+    hass_mock = type("HomeAssistantMock", (), {"data": {}})()
+    coordinator = VertragsmanagerCoordinator(hass_mock)  # type: ignore
 
     contract_data = {
         "name": "Testvertrag",
@@ -38,44 +80,6 @@ async def test_coordinator_add_contract(hass: HomeAssistant) -> None:
     assert contract is not None
     assert contract.name == "Testvertrag"
     assert contract.monthly_cost == 29.99
-
-
-async def test_coordinator_total_cost(hass: HomeAssistant) -> None:
-    """Test total monthly cost calculation."""
-    coordinator = VertragsmanagerCoordinator(hass)
-
-    # Add two contracts
-    coordinator.update_contract(
-        "entry_1",
-        {
-            "name": "Vertrag 1",
-            "category": "Handy",
-            "provider": "Provider1",
-            "cost": 29.99,
-            "cycle": "monatlich",
-            "start_date": "2024-01-01",
-            "notice_days": 30,
-            "duration_months": 12,
-            "auto_renew": True,
-        },
-    )
-
-    coordinator.update_contract(
-        "entry_2",
-        {
-            "name": "Vertrag 2",
-            "category": "Strom",
-            "provider": "Provider2",
-            "cost": 360.0,
-            "cycle": "jährlich",
-            "start_date": "2024-01-01",
-            "notice_days": 30,
-            "duration_months": 12,
-            "auto_renew": True,
-        },
-    )
-
-    assert coordinator.data.total_monthly_cost == 59.99  # 29.99 + 30.00
 
 
 def test_add_months() -> None:

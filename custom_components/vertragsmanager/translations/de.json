@@ -54,7 +54,20 @@
         }
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "vertrag": {
+        "name": "Kündigungsfrist"
+      },
+      "gesamtkosten": {
+        "name": "Gesamtkosten"
+      }
+    }
+  },
+  "device": {
+    "contract": {
+      "name": "Vertrag"
+    }
   }
 }
-
-
