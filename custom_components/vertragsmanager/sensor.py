@@ -79,14 +79,19 @@ class VertragSensorEntity(CoordinatorEntity, SensorEntity):
         if not contract:
             return DeviceInfo(identifiers={(DOMAIN, self._entry_id)})
 
+        # configuration_url muss vollständige URL sein
+        hass = self.coordinator.hass
+        base_url = hass.config.external_url or hass.config.internal_url
+        config_url = f"{base_url}/vertragsmanager" if base_url else None
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry_id)},
             name=contract.name,
             manufacturer=contract.provider,
             model=contract.category,
             serial_number=contract.contract_number or self._entry_id,
-            sw_version="0.6.1",
-            configuration_url="/vertragsmanager",
+            sw_version="0.7.0",
+            configuration_url=config_url,
         )
 
     @property

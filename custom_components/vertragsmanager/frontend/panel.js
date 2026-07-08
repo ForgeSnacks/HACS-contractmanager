@@ -355,4 +355,6 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 }
 
-customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
+if (!customElements.get("vertragsmanager-panel")) {
+  customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
+}
