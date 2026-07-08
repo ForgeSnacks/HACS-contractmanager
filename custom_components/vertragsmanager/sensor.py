@@ -84,18 +84,22 @@ class VertragSensorEntity(CoordinatorEntity, SensorEntity):
         base_url = hass.config.external_url or hass.config.internal_url
         config_url = f"{base_url}/vertragsmanager" if base_url else None
 
+        # Seriennummer kürzen
+        serial = contract.contract_number[:20] if contract.contract_number and len(contract.contract_number) > 20 else contract.contract_number
+
         return DeviceInfo(
             identifiers={(DOMAIN, self._entry_id)},
             name=contract.name,
             manufacturer=contract.provider,
             model=contract.category,
-            serial_number=contract.contract_number or self._entry_id,
-            sw_version="0.7.0",
+            serial_number=serial or None,
+            sw_version="0.6.1",
             configuration_url=config_url,
         )
 
     @property
     def extra_state_attributes(self) -> dict | None:
+        """Attribute ohne Umlaute für JS-Parsing."""
         contract = self._contract
         if not contract:
             return None
@@ -106,25 +110,25 @@ class VertragSensorEntity(CoordinatorEntity, SensorEntity):
         deadline = _calc_deadline(renewal, contract.notice_days)
 
         return {
-            "kategorie": contract.category,
-            "anbieter": contract.provider,
-            "kosten": contract.cost,
-            "zyklus": contract.cycle,
-            "monatliche_kosten": contract.monthly_cost,
-            "vertragsstart": contract.start_date,
-            "kündigungsfrist_tage": contract.notice_days,
-            "laufzeit_monate": contract.duration_months,
-            "nächste_verlängerung": renewal.isoformat(),
-            "kündigungsfrist_datum": deadline.isoformat(),
-            "automatische_verlängerung": contract.auto_renew,
-            "vertragsnummer": contract.contract_number,
-            "kundennummer": contract.customer_number,
-            "kündigungsfrist_text": contract.notice_period_text,
-            "abbuchungstag": contract.payment_day,
-            "notizen": contract.notes,
+            "category": contract.category,
+            "provider": contract.provider,
+            "cost": contract.cost,
+            "cycle": contract.cycle,
+            "monthly_cost": contract.monthly_cost,
+            "start_date": contract.start_date,
+            "notice_days": contract.notice_days,
+            "duration_months": contract.duration_months,
+            "next_renewal": renewal.isoformat(),
+            "deadline_date": deadline.isoformat(),
+            "auto_renew": contract.auto_renew,
+            "contract_number": contract.contract_number,
+            "customer_number": contract.customer_number,
+            "notice_period_text": contract.notice_period_text,
+            "payment_day": contract.payment_day,
+            "notes": contract.notes,
             "portal_url": contract.portal_url,
             "email": contract.email,
-            "telefon": contract.phone,
+            "phone": contract.phone,
         }
 
 

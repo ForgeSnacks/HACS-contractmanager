@@ -122,16 +122,16 @@ class VertragsmanagerPanel extends HTMLElement {
 
   contracts() {
     return Object.values(this._hass.states)
-      .filter((state) => state.entity_id.startsWith("sensor.") && state.attributes.kündigungsfrist_datum)
+      .filter((state) => state.entity_id.startsWith("sensor.") && state.attributes.deadline_date)
       .map((state) => ({
         entity_id: state.entity_id,
         name: state.attributes.friendly_name || state.entity_id,
-        provider: state.attributes.anbieter || "",
-        category: state.attributes.kategorie || "",
-        cost: Number(state.attributes.monatliche_kosten || 0),
+        provider: state.attributes.provider || "",
+        category: state.attributes.category || "",
+        cost: Number(state.attributes.monthly_cost || 0),
         deadlineDays: Number(state.state || 0),
-        deadlineDate: state.attributes.kündigungsfrist_datum || "",
-        renewalDate: state.attributes.nächste_verlängerung || "",
+        deadlineDate: state.attributes.deadline_date || "",
+        renewalDate: state.attributes.next_renewal || "",
       }))
       .sort((a, b) => a.deadlineDays - b.deadlineDays);
   }
@@ -282,10 +282,10 @@ class VertragsmanagerPanel extends HTMLElement {
           <input name="start_date" type="date" required>
           <input name="notice_days" type="number" value="30" required>
           <input name="duration_months" type="number" value="12" required>
-	  <label style="display:inline-flex; align-items:center; gap:8px;">
-	    <input name="auto_renew" type="checkbox" checked style="margin:0;">
-	    Automatische Verlängerung
-	  </label>
+          <label style="display:inline-flex; align-items:center; gap:8px;">
+            <input name="auto_renew" type="checkbox" checked style="margin:0;">
+            Automatische Verlängerung
+          </label>
           <input name="contract_number" placeholder="Vertragsnummer">
           <input name="customer_number" placeholder="Kundennummer">
           <input name="notice_period_text" placeholder="Kündigungsfrist als Text">
@@ -355,6 +355,7 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 }
 
+// Verhindern, dass Panel doppelt registriert wird
 if (!customElements.get("vertragsmanager-panel")) {
   customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
 }
