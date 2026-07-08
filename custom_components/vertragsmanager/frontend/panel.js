@@ -150,7 +150,7 @@ class VertragsmanagerPanel extends HTMLElement {
       if (!btn) return;
       this._page = btn.dataset.page;
       const url = new URL(window.location.href);
-      url.searchParams.set("page", this._page);
+      url.searchParams.set("page", self._page);
       window.history.replaceState({}, "", url);
       this.render();
     });
@@ -423,7 +423,7 @@ class VertragsmanagerPanel extends HTMLElement {
       event.preventDefault();
       const result = this.querySelector("#result");
       const data = Object.fromEntries(new FormData(form).entries());
-      data.auto_renew = form.querySelector('[name=\"auto_renew\"]').checked;
+      data.auto_renew = form.querySelector('[name="auto_renew"]').checked;
       data.cost = Number(data.cost || 0);
       data.notice_days = Number(data.notice_days || 0);
       data.duration_months = Number(data.duration_months || 0);
