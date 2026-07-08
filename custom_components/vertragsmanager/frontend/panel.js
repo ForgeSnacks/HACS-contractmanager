@@ -282,7 +282,10 @@ class VertragsmanagerPanel extends HTMLElement {
           <input name="start_date" type="date" required>
           <input name="notice_days" type="number" value="30" required>
           <input name="duration_months" type="number" value="12" required>
-          <label><input name="auto_renew" type="checkbox" checked> Automatische Verlängerung</label>
+	  <label style="display:inline-flex; align-items:center; gap:8px;">
+	    <input name="auto_renew" type="checkbox" checked style="margin:0;">
+	    Automatische Verlängerung
+	  </label>
           <input name="contract_number" placeholder="Vertragsnummer">
           <input name="customer_number" placeholder="Kundennummer">
           <input name="notice_period_text" placeholder="Kündigungsfrist als Text">
