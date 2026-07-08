@@ -148,3 +148,4 @@ class GesamtkostenSensor(SensorEntity):
             if data:
                 verträge.append(data.get(CONF_NAME))
         return {"anzahl_verträge": len(verträge), "verträge": verträge}
+
