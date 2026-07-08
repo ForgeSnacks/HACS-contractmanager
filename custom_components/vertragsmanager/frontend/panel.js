@@ -67,16 +67,11 @@ class VertragsmanagerPanel extends HTMLElement {
           border-radius: 12px;
           padding: 16px;
         }
-        .value {
-          font-size: 1.8rem;
-          font-weight: 700;
-        }
-        .hint {
-          color: var(--secondary-text-color);
-        }
+        .value { font-size: 1.8rem; font-weight: 700; }
+        .hint { color: var(--secondary-text-color); }
         .bar-row {
           display: grid;
-          grid-template-columns: 180px 1fr 120px;
+          grid-template-columns: 220px 1fr 120px;
           gap: 12px;
           align-items: center;
           margin-bottom: 10px;
@@ -87,56 +82,12 @@ class VertragsmanagerPanel extends HTMLElement {
           overflow: hidden;
           background: rgba(120,120,120,0.18);
         }
-        .bar > div {
-          height: 100%;
-          background: var(--primary-color);
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        th, td {
-          text-align: left;
-          padding: 10px 8px;
-          border-bottom: 1px solid var(--divider-color);
-        }
-        form {
-          display: grid;
-          gap: 12px;
-        }
-        input, select, textarea {
-          width: 100%;
-          padding: 10px 12px;
-          border-radius: 10px;
-          border: 1px solid var(--divider-color);
-          background: var(--card-background-color, #ffffff);
-          color: var(--primary-text-color);
-          box-sizing: border-box;
-        }
-        textarea {
-          min-height: 100px;
-          resize: vertical;
-        }
-        .primary {
-          background: var(--primary-color);
-          color: white;
-          border: none;
-          padding: 12px 16px;
-          border-radius: 10px;
-          cursor: pointer;
-        }
-        .actions {
-          display: flex;
-          gap: 12px;
-          align-items: center;
-        }
+        .bar > div { height: 100%; background: var(--primary-color); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--divider-color); }
         @media (max-width: 900px) {
-          .split {
-            grid-template-columns: 1fr;
-          }
-          .bar-row {
-            grid-template-columns: 1fr;
-          }
+          .split { grid-template-columns: 1fr; }
+          .bar-row { grid-template-columns: 1fr; }
         }
       </style>
       <div class="wrap">
@@ -150,7 +101,7 @@ class VertragsmanagerPanel extends HTMLElement {
       if (!btn) return;
       this._page = btn.dataset.page;
       const url = new URL(window.location.href);
-      url.searchParams.set("page", self._page);
+      url.searchParams.set("page", this._page);
       window.history.replaceState({}, "", url);
       this.render();
     });
@@ -161,17 +112,15 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 
   _contractKeyFromState(state) {
-    return state.entity_id
-      .replace(/^sensor\.vertragsmanager_/, "")
-      .replace(/_frist$/, "");
+    return state.entity_id.replace(/^sensor\.vertragsmanager_/, "").replace(/_frist$/, "");
   }
 
-  _allContractStates() {
-    return Object.values(this._hass.states).filter((state) => state.entity_id.startsWith("sensor.vertragsmanager_"));
+  _deviceNameFromState(state) {
+    return state?.attributes?.device_name || state?.attributes?.friendly_name || this._contractKeyFromState(state).replace(/_/g, " ");
   }
 
-  _findStateBySuffix(contractKey, suffix) {
-    return this._allContractStates().find((state) => state.entity_id === `sensor.vertragsmanager_${contractKey}_${suffix}`);
+  _findMonthlyState(contractKey) {
+    return this._hass.states[`sensor.vertragsmanager_${contractKey}_monatskosten`] || null;
   }
 
   contracts() {
@@ -179,18 +128,14 @@ class VertragsmanagerPanel extends HTMLElement {
       .filter((state) => this._isPrimaryContractSensor(state))
       .map((state) => {
         const contractKey = this._contractKeyFromState(state);
-        const monthly = this._findStateBySuffix(contractKey, "monatskosten");
-        const paid = this._findStateBySuffix(contractKey, "gezahlt");
-        const remaining = this._findStateBySuffix(contractKey, "zahlen");
+        const monthly = this._findMonthlyState(contractKey);
         return {
           entity_id: state.entity_id,
           key: contractKey,
-          name: state.attributes.friendly_name || contractKey.replace(/_/g, " "),
+          name: this._deviceNameFromState(state),
           provider: state.attributes.provider || "",
           category: state.attributes.category || "",
-          monthlyCost: Number(monthly?.state || state.attributes.monthly_cost || 0),
-          paidCost: Number(paid?.state || 0),
-          remainingCost: Number(remaining?.state || 0),
+          monthlyCost: Number(monthly?.state || 0),
           deadlineDays: Number(state.state || 0),
           deadlineDate: state.attributes.deadline_date || "",
           renewalDate: state.attributes.next_renewal || "",
@@ -208,12 +153,8 @@ class VertragsmanagerPanel extends HTMLElement {
 
   groupByCategory(contracts) {
     const grouped = {};
-    for (const item of contracts) {
-      grouped[item.category] = (grouped[item.category] || 0) + item.monthlyCost;
-    }
-    return Object.entries(grouped)
-      .map(([name, value]) => ({ name, value }))
-      .sort((a, b) => b.value - a.value);
+    for (const item of contracts) grouped[item.category] = (grouped[item.category] || 0) + item.monthlyCost;
+    return Object.entries(grouped).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value);
   }
 
   bars(items, suffix = "€") {
@@ -266,7 +207,6 @@ class VertragsmanagerPanel extends HTMLElement {
     const summary = this.summary(contracts);
     const costByContract = contracts.map((item) => ({ name: item.name, value: item.monthlyCost }));
     const costByCategory = this.groupByCategory(contracts);
-
     return `
       <div class="grid">
         <div class="card"><h3>Verträge</h3><div class="value">${contracts.length}</div></div>
@@ -275,24 +215,12 @@ class VertragsmanagerPanel extends HTMLElement {
         <div class="card"><h3>Nächste Frist</h3><div class="value">${summary.next ? `${Math.round(summary.next.deadlineDays)} Tage` : "-"}</div></div>
       </div>
       <div class="split">
-        <div class="card">
-          <h3>Kosten pro Vertrag</h3>
-          ${this.bars(costByContract)}
-        </div>
-        <div class="card">
-          <h3>Kosten nach Kategorie</h3>
-          ${this.bars(costByCategory)}
-        </div>
+        <div class="card"><h3>Kosten pro Vertrag</h3>${this.bars(costByContract)}</div>
+        <div class="card"><h3>Kosten nach Kategorie</h3>${this.bars(costByCategory)}</div>
       </div>
       <div class="split">
-        <div class="card">
-          <h3>Kosten-Diagramm</h3>
-          ${this.pieChart(costByContract)}
-        </div>
-        <div class="card">
-          <h3>Kategorien-Diagramm</h3>
-          ${this.pieChart(costByCategory)}
-        </div>
+        <div class="card"><h3>Kosten-Diagramm</h3>${this.pieChart(costByContract)}</div>
+        <div class="card"><h3>Kategorien-Diagramm</h3>${this.pieChart(costByCategory)}</div>
       </div>
     `;
   }
@@ -304,14 +232,7 @@ class VertragsmanagerPanel extends HTMLElement {
         <table>
           <thead>
             <tr>
-              <th>Name</th>
-              <th>Anbieter</th>
-              <th>Kategorie</th>
-              <th>Monatlich</th>
-              <th>Bereits gezahlt</th>
-              <th>Noch zu zahlen</th>
-              <th>Kündigung in</th>
-              <th>Fristdatum</th>
+              <th>Name</th><th>Anbieter</th><th>Kategorie</th><th>Monatlich</th><th>Kündigung in</th><th>Fristdatum</th>
             </tr>
           </thead>
           <tbody>
@@ -321,8 +242,6 @@ class VertragsmanagerPanel extends HTMLElement {
                 <td>${item.provider}</td>
                 <td>${item.category}</td>
                 <td>${item.monthlyCost.toFixed(2)} €</td>
-                <td>${item.paidCost.toFixed(2)} €</td>
-                <td>${item.remainingCost.toFixed(2)} €</td>
                 <td>${Math.round(item.deadlineDays)} Tage</td>
                 <td>${item.deadlineDate}</td>
               </tr>
@@ -336,17 +255,10 @@ class VertragsmanagerPanel extends HTMLElement {
   renderCosts(contracts) {
     const costByContract = contracts.map((item) => ({ name: item.name, value: item.monthlyCost }));
     const costByCategory = this.groupByCategory(contracts);
-
     return `
       <div class="split">
-        <div class="card">
-          <h3>Monatliche Kosten je Vertrag</h3>
-          ${this.bars(costByContract)}
-        </div>
-        <div class="card">
-          <h3>Kosten je Kategorie</h3>
-          ${this.bars(costByCategory)}
-        </div>
+        <div class="card"><h3>Monatliche Kosten je Vertrag</h3>${this.bars(costByContract)}</div>
+        <div class="card"><h3>Kosten je Kategorie</h3>${this.bars(costByCategory)}</div>
       </div>
     `;
   }
@@ -366,103 +278,18 @@ class VertragsmanagerPanel extends HTMLElement {
     `;
   }
 
-  renderAdd() {
-    return `
-      <div class="card">
-        <h3>Vertrag hinzufügen</h3>
-        <form id="add-form">
-          <input name="name" placeholder="Name des Vertrags" required>
-          <select name="category" required>
-            <option>Handy</option>
-            <option>Strom</option>
-            <option>Gas</option>
-            <option>Internet</option>
-            <option>Miete</option>
-            <option>Versicherung</option>
-            <option>Streaming</option>
-            <option>Fitness</option>
-            <option>Software</option>
-            <option>Sonstiges</option>
-          </select>
-          <input name="provider" placeholder="Anbieter" required>
-          <input name="cost" type="number" step="0.01" placeholder="Kosten pro Zyklus" required>
-          <select name="cycle" required>
-            <option>monatlich</option>
-            <option>jährlich</option>
-          </select>
-          <input name="start_date" type="date" required>
-          <input name="notice_days" type="number" value="30" required>
-          <input name="duration_months" type="number" value="12" required>
-          <label style="display:inline-flex; align-items:center; gap:8px;">
-            <input name="auto_renew" type="checkbox" checked style="margin:0;">
-            Automatische Verlängerung
-          </label>
-          <input name="contract_number" placeholder="Vertragsnummer">
-          <input name="customer_number" placeholder="Kundennummer">
-          <input name="notice_period_text" placeholder="Kündigungsfrist als Text">
-          <input name="payment_day" placeholder="Abbuchungstag">
-          <input name="portal_url" placeholder="Portal-URL">
-          <input name="email" placeholder="Kontakt-E-Mail">
-          <input name="phone" placeholder="Telefonnummer">
-          <textarea name="notes" placeholder="Notizen"></textarea>
-          <div class="actions">
-            <button class="primary" type="submit">Vertrag anlegen</button>
-            <span class="hint" id="result"></span>
-          </div>
-        </form>
-      </div>
-    `;
-  }
-
-  bindForm() {
-    const form = this.querySelector("#add-form");
-    if (!form || form.dataset.bound) return;
-    form.dataset.bound = "1";
-
-    form.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      const result = this.querySelector("#result");
-      const data = Object.fromEntries(new FormData(form).entries());
-      data.auto_renew = form.querySelector('[name="auto_renew"]').checked;
-      data.cost = Number(data.cost || 0);
-      data.notice_days = Number(data.notice_days || 0);
-      data.duration_months = Number(data.duration_months || 0);
-
-      try {
-        await this._hass.callService("vertragsmanager", "create_contract", data);
-        result.textContent = "Vertrag wurde angelegt.";
-        form.reset();
-      } catch (err) {
-        result.textContent = `Fehler: ${err}`;
-      }
-    });
-  }
-
   render() {
     if (!this._hass) return;
-
     const contracts = this.contracts();
-    const pages = [
-      ["overview", "Übersicht"],
-      ["contracts", "Alle Verträge"],
-      ["costs", "Kosten"],
-      ["deadlines", "Fristen"],
-      ["add", "Hinzufügen"]
-    ];
-
-    this.querySelector("#nav").innerHTML = pages.map(([key, label]) => `
-      <button class="${this._page === key ? "active" : ""}" data-page="${key}">${label}</button>
-    `).join("");
-
+    const pages = [["overview", "Übersicht"],["contracts", "Alle Verträge"],["costs", "Kosten"],["deadlines", "Fristen"],["add", "Hinzufügen"]];
+    this.querySelector("#nav").innerHTML = pages.map(([key, label]) => `<button class="${this._page === key ? "active" : ""}" data-page="${key}">${label}</button>`).join("");
     let content = "";
     if (this._page === "overview") content = this.renderOverview(contracts);
     if (this._page === "contracts") content = this.renderContracts(contracts);
     if (this._page === "costs") content = this.renderCosts(contracts);
     if (this._page === "deadlines") content = this.renderDeadlines(contracts);
-    if (this._page === "add") content = this.renderAdd();
-
+    if (this._page === "add") content = `<div class="card"><h3>Vertrag hinzufügen</h3><p class="hint">Formular kommt im nächsten Schritt.</p></div>`;
     this.querySelector("#content").innerHTML = content;
-    this.bindForm();
   }
 }
 
