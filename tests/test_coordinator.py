@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+from unittest.mock import MagicMock
 
 from custom_components.vertragsmanager.coordinator import (
     VertragData,
@@ -57,8 +58,13 @@ def test_vertrag_data_monthly_cost_yearly() -> None:
 
 def test_coordinator_update_contract() -> None:
     """Test updating contract in coordinator (mocked hass)."""
-    # Mock hass object
-    hass_mock = type("HomeAssistantMock", (), {"data": {}})()
+    # Mock hass object with required attributes
+    hass_mock = MagicMock()
+    hass_mock.data = {}
+    hass_mock.loop = MagicMock()
+    hass_mock.async_add_executor_job = MagicMock()
+    hass_mock.async_create_task = MagicMock()
+
     coordinator = VertragsmanagerCoordinator(hass_mock)  # type: ignore
 
     contract_data = {
