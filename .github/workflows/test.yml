@@ -21,7 +21,7 @@ jobs:
       
       - name: Install dependencies
         run: |
-          pip install pytest pytest-asyncio
+          pip install pytest pytest-asyncio homeassistant
       
       - name: Run tests
         run: |
