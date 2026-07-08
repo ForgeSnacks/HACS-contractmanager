@@ -47,13 +47,20 @@ async def async_setup_entry(
     contract = coordinator.data.get_contract(entry.entry_id)
     name_slug = _slugify(contract.name) if contract else entry.entry_id
 
-    # Alle Sensoren für diesen Vertrag mit vertragsmanager_ Prefix
-    async_add_entities([
+    # Alle Sensoren für diesen Vertrag
+    entities = [
         VertragLaufzeitSensorEntity(coordinator, entry.entry_id, name_slug),
         VertragPreisProMonatSensorEntity(coordinator, entry.entry_id, name_slug),
         VertragBereitsGezahltSensorEntity(coordinator, entry.entry_id, name_slug),
         VertragNochZuZahlenSensorEntity(coordinator, entry.entry_id, name_slug),
-    ])
+    ]
+    
+    # Entity IDs explizit setzen: sensor.vertragsmanager_{name}_{suffix}
+    for entity in entities:
+        suffix = entity._attr_unique_id.split('_')[-1]
+        entity.entity_id = f"sensor.{DOMAIN}_{name_slug}_{suffix}"
+    
+    async_add_entities(entities)
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
     summary_key = f"{DOMAIN}_summary_added"
@@ -164,17 +171,11 @@ class VertragBereitsGezahltSensorEntity(CoordinatorEntity, SensorEntity):
         today = date.today()
         start = date.fromisoformat(contract.start_date)
         
-        # Bereite bereits verstrichene Monate
         months_passed = (today.year - start.year) * 12 + (today.month - start.month)
-        
-        # Wenn Tag im aktuellen Monat noch nicht erreicht, ein Monat weniger
         if today.day < start.day:
             months_passed -= 1
-        
-        # Nicht weniger als 0
         months_passed = max(0, months_passed)
         
-        # Kosten berechnen
         return round(months_passed * contract.monthly_cost, 2)
 
     @property
@@ -213,21 +214,13 @@ class VertragNochZuZahlenSensorEntity(CoordinatorEntity, SensorEntity):
         
         today = date.today()
         start = date.fromisoformat(contract.start_date)
-        
-        # Nächstes Verlängerungsdatum
         renewal = _calc_next_renewal(start, contract.duration_months, today)
         
-        # Monate bis zur Verlängerung
         months_until_renewal = (renewal.year - today.year) * 12 + (renewal.month - today.month)
-        
-        # Wenn Tag im aktuellen Monat noch nicht erreicht, ein Monat weniger
         if renewal.day < today.day:
             months_until_renewal -= 1
-        
-        # Nicht weniger als 0
         months_until_renewal = max(0, months_until_renewal)
         
-        # Kosten berechnen
         return round(months_until_renewal * contract.monthly_cost, 2)
 
     @property
@@ -246,12 +239,10 @@ def _get_device_info(coordinator: VertragsmanagerCoordinator, entry_id: str) -> 
     if not contract:
         return DeviceInfo(identifiers={(DOMAIN, entry_id)})
 
-    # configuration_url muss vollständige URL sein
     hass = coordinator.hass
     base_url = hass.config.external_url or hass.config.internal_url
     config_url = f"{base_url}/vertragsmanager" if base_url else None
 
-    # Seriennummer kürzen
     serial = contract.contract_number[:20] if contract.contract_number and len(contract.contract_number) > 20 else contract.contract_number
 
     return DeviceInfo(
