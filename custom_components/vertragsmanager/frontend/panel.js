@@ -122,10 +122,14 @@ class VertragsmanagerPanel extends HTMLElement {
 
   contracts() {
     return Object.values(this._hass.states)
-      .filter((state) => state.entity_id.startsWith("sensor.") && state.attributes.deadline_date)
+      .filter((state) => 
+        state.entity_id.startsWith("sensor.vertragsmanager_") && 
+        state.entity_id.endsWith("_frist") &&
+        state.attributes.deadline_date
+      )
       .map((state) => ({
         entity_id: state.entity_id,
-        name: state.attributes.friendly_name || state.entity_id,
+        name: state.attributes.friendly_name || state.entity_id.replace("sensor.vertragsmanager_", "").replace("_frist", "").replace(/_/g, " "),
         provider: state.attributes.provider || "",
         category: state.attributes.category || "",
         cost: Number(state.attributes.monthly_cost || 0),
@@ -165,6 +169,44 @@ class VertragsmanagerPanel extends HTMLElement {
     `).join("");
   }
 
+  pieChart(items) {
+    if (!items.length) return `<p class="hint">Noch keine Daten vorhanden.</p>`;
+    const total = items.reduce((sum, item) => sum + item.value, 0);
+    const colors = [
+      '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+      '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#64748b'
+    ];
+    let cumulative = 0;
+    const segments = items.map((item, idx) => {
+      const percentage = (item.value / total) * 100;
+      const startAngle = (cumulative / total) * 360;
+      cumulative += item.value;
+      const endAngle = (cumulative / total) * 360;
+      const largeArc = percentage > 50 ? 1 : 0;
+      const x1 = Math.cos(Math.PI * startAngle / 180) * 100;
+      const y1 = Math.sin(Math.PI * startAngle / 180) * 100;
+      const x2 = Math.cos(Math.PI * endAngle / 180) * 100;
+      const y2 = Math.sin(Math.PI * endAngle / 180) * 100;
+      const d = `M 0 0 L ${x1} ${y1} A 100 100 0 ${largeArc} 1 ${x2} ${y2} Z`;
+      return `<path d="${d}" fill="${colors[idx % colors.length]}" stroke="white" stroke-width="2">
+        <title>${item.name}: ${item.value.toFixed(2)} € (${percentage.toFixed(1)}%)</title>
+      </path>`;
+    }).join("");
+    return `
+      <div style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+        <svg viewBox="-100 -100 200 200" width="200" height="200">${segments}</svg>
+        <div>
+          ${items.map((item, idx) => `
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <div style="width:12px; height:12px; background:${colors[idx % colors.length]}; border-radius:2px;"></div>
+              <span>${item.name}: ${item.value.toFixed(2)} €</span>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `;
+  }
+
   renderOverview(contracts) {
     const summary = this.summary(contracts);
     const costByContract = contracts.map((item) => ({ name: item.name, value: item.cost }));
@@ -185,6 +227,16 @@ class VertragsmanagerPanel extends HTMLElement {
         <div class="card">
           <h3>Kosten nach Kategorie</h3>
           ${this.bars(costByCategory)}
+        </div>
+      </div>
+      <div class="split">
+        <div class="card">
+          <h3>Kosten-Diagramm</h3>
+          ${this.pieChart(costByContract)}
+        </div>
+        <div class="card">
+          <h3>Kategorien-Diagramm</h3>
+          ${this.pieChart(costByCategory)}
         </div>
       </div>
     `;

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+import re
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
@@ -24,18 +25,34 @@ from .coordinator import (
 SUMMARY_UNIQUE_ID = "vertragsmanager_gesamtkosten"
 
 
+def _slugify(text: str) -> str:
+    """Macht aus Text einen slug."""
+    text = text.lower().strip()
+    text = re.sub(r'[äáàâã]', 'a', text)
+    text = re.sub(r'[öóòôõ]', 'o', text)
+    text = re.sub(r'[üúùû]', 'u', text)
+    text = re.sub(r'[ß]', 'ss', text)
+    text = re.sub(r'[^a-z0-9]+', '_', text)
+    text = re.sub(r'_+', '_', text)
+    return text.strip('_')
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Sensoren für diesen Vertrag anlegen + Gesamtkosten-Sensor."""
     coordinator: VertragsmanagerCoordinator = entry.runtime_data.coordinator
 
-    # Alle Sensoren für diesen Vertrag
+    # Hole Vertragsname für Entity-ID
+    contract = coordinator.data.get_contract(entry.entry_id)
+    name_slug = _slugify(contract.name) if contract else entry.entry_id
+
+    # Alle Sensoren für diesen Vertrag mit vertragsmanager_ Prefix
     async_add_entities([
-        VertragLaufzeitSensorEntity(coordinator, entry.entry_id),
-        VertragPreisProMonatSensorEntity(coordinator, entry.entry_id),
-        VertragBereitsGezahltSensorEntity(coordinator, entry.entry_id),
-        VertragNochZuZahlenSensorEntity(coordinator, entry.entry_id),
+        VertragLaufzeitSensorEntity(coordinator, entry.entry_id, name_slug),
+        VertragPreisProMonatSensorEntity(coordinator, entry.entry_id, name_slug),
+        VertragBereitsGezahltSensorEntity(coordinator, entry.entry_id, name_slug),
+        VertragNochZuZahlenSensorEntity(coordinator, entry.entry_id, name_slug),
     ])
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
@@ -50,12 +67,14 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:file-document-outline"
     _attr_native_unit_of_measurement = "Tage"
-    _attr_translation_key = "vertrag"
+    _attr_has_entity_name = True
+    _attr_name = "Kündigungsfrist"
 
-    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}"
+        self._name_slug = name_slug
+        self._attr_unique_id = f"{DOMAIN}_{name_slug}_frist"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -74,13 +93,7 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
         return (deadline - today).days
 
     @property
-    def name(self) -> str:
-        contract = self._contract
-        return f"{contract.name} Kündigungsfrist" if contract else "Vertrag"
-
-    @property
     def device_info(self) -> DeviceInfo:
-        """Gibt Device-Info für diesen Vertrag zurück."""
         return _get_device_info(self.coordinator, self._entry_id)
 
     @property
@@ -93,12 +106,14 @@ class VertragPreisProMonatSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:cash-multiple"
     _attr_native_unit_of_measurement = "EUR"
-    _attr_translation_key = "vertrag"
+    _attr_has_entity_name = True
+    _attr_name = "Monatliche Kosten"
 
-    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}_monatskosten"
+        self._name_slug = name_slug
+        self._attr_unique_id = f"{DOMAIN}_{name_slug}_monatskosten"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -111,11 +126,6 @@ class VertragPreisProMonatSensorEntity(CoordinatorEntity, SensorEntity):
         if not contract:
             return None
         return contract.monthly_cost
-
-    @property
-    def name(self) -> str:
-        contract = self._contract
-        return f"{contract.name} monatlich" if contract else "Vertrag"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -131,12 +141,14 @@ class VertragBereitsGezahltSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:cash-check"
     _attr_native_unit_of_measurement = "EUR"
-    _attr_translation_key = "vertrag"
+    _attr_has_entity_name = True
+    _attr_name = "Bereits gezahlt"
 
-    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}_bereits_gezahlt"
+        self._name_slug = name_slug
+        self._attr_unique_id = f"{DOMAIN}_{name_slug}_bereits_gezahlt"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -166,11 +178,6 @@ class VertragBereitsGezahltSensorEntity(CoordinatorEntity, SensorEntity):
         return round(months_passed * contract.monthly_cost, 2)
 
     @property
-    def name(self) -> str:
-        contract = self._contract
-        return f"{contract.name} bereits gezahlt" if contract else "Vertrag"
-
-    @property
     def device_info(self) -> DeviceInfo:
         return _get_device_info(self.coordinator, self._entry_id)
 
@@ -184,12 +191,14 @@ class VertragNochZuZahlenSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:cash-minus"
     _attr_native_unit_of_measurement = "EUR"
-    _attr_translation_key = "vertrag"
+    _attr_has_entity_name = True
+    _attr_name = "Noch zu zahlen"
 
-    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str) -> None:
+    def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
-        self._attr_unique_id = f"{DOMAIN}_{entry_id}_noch_zu_zahlen"
+        self._name_slug = name_slug
+        self._attr_unique_id = f"{DOMAIN}_{name_slug}_noch_zu_zahlen"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -220,11 +229,6 @@ class VertragNochZuZahlenSensorEntity(CoordinatorEntity, SensorEntity):
         
         # Kosten berechnen
         return round(months_until_renewal * contract.monthly_cost, 2)
-
-    @property
-    def name(self) -> str:
-        contract = self._contract
-        return f"{contract.name} noch zu zahlen" if contract else "Vertrag"
 
     @property
     def device_info(self) -> DeviceInfo:
