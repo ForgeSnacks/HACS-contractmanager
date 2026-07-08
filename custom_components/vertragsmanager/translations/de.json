@@ -9,30 +9,48 @@
           "provider": "Anbieter",
           "cost": "Kosten pro Zyklus",
           "cycle": "Zahlungszyklus",
-          "start_date": "Vertragsstart (JJJJ-MM-TT)",
+          "start_date": "Vertragsstart",
           "notice_days": "Kündigungsfrist (Tage)",
           "duration_months": "Laufzeit (Monate)",
-          "auto_renew": "Automatische Verlängerung"
+          "auto_renew": "Automatische Verlängerung",
+          "contract_number": "Vertragsnummer",
+          "customer_number": "Kundennummer",
+          "notice_period_text": "Kündigungsfrist als Text",
+          "payment_day": "Abbuchungstag",
+          "notes": "Notizen",
+          "portal_url": "Portal-URL",
+          "email": "E-Mail",
+          "phone": "Telefon"
         }
       }
     },
     "error": {
-      "invalid_date": "Bitte Datum im Format JJJJ-MM-TT eingeben"
+      "invalid_date": "Bitte ein gültiges Datum auswählen"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Vertrag bearbeiten",
+        "title": "Vertrag und Panel konfigurieren",
         "data": {
+          "show_in_sidebar": "In der Navigation anzeigen",
+          "default_page": "Startseite des Panels",
           "category": "Kategorie",
           "provider": "Anbieter",
           "cost": "Kosten pro Zyklus",
           "cycle": "Zahlungszyklus",
-          "start_date": "Vertragsstart (JJJJ-MM-TT)",
+          "start_date": "Vertragsstart",
           "notice_days": "Kündigungsfrist (Tage)",
           "duration_months": "Laufzeit (Monate)",
-          "auto_renew": "Automatische Verlängerung"
+          "auto_renew": "Automatische Verlängerung",
+          "contract_number": "Vertragsnummer",
+          "customer_number": "Kundennummer",
+          "notice_period_text": "Kündigungsfrist als Text",
+          "payment_day": "Abbuchungstag",
+          "notes": "Notizen",
+          "portal_url": "Portal-URL",
+          "email": "E-Mail",
+          "phone": "Telefon"
         }
       }
     }

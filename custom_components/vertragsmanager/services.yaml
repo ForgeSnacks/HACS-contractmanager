@@ -1,0 +1,109 @@
+create_contract:
+  name: Vertrag anlegen
+  description: Legt einen neuen Vertrag für den Vertragsmanager an.
+  fields:
+    name:
+      name: Vertragsname
+      description: Anzeigename des Vertrags.
+      required: true
+      example: Glasfaser 600 mit MagentaTV MegaStream
+      selector:
+        text:
+    category:
+      name: Kategorie
+      required: true
+      selector:
+        select:
+          options:
+            - Handy
+            - Strom
+            - Gas
+            - Internet
+            - Miete
+            - Versicherung
+            - Streaming
+            - Fitness
+            - Software
+            - Sonstiges
+          mode: dropdown
+    provider:
+      name: Anbieter
+      required: true
+      selector:
+        text:
+    cost:
+      name: Kosten
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          mode: box
+    cycle:
+      name: Zahlungszyklus
+      required: true
+      selector:
+        select:
+          options:
+            - monatlich
+            - jährlich
+          mode: dropdown
+    start_date:
+      name: Vertragsstart
+      required: true
+      selector:
+        text:
+          type: date
+    notice_days:
+      name: Kündigungsfrist in Tagen
+      required: true
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+    duration_months:
+      name: Laufzeit in Monaten
+      required: true
+      selector:
+        number:
+          min: 1
+          step: 1
+          mode: box
+    auto_renew:
+      name: Automatische Verlängerung
+      selector:
+        boolean:
+    contract_number:
+      name: Vertragsnummer
+      selector:
+        text:
+    customer_number:
+      name: Kundennummer
+      selector:
+        text:
+    notice_period_text:
+      name: Kündigungsfrist als Text
+      selector:
+        text:
+    payment_day:
+      name: Abbuchungstag
+      selector:
+        text:
+    notes:
+      name: Notizen
+      selector:
+        text:
+          multiline: true
+    portal_url:
+      name: Portal-URL
+      selector:
+        text:
+    email:
+      name: Kontakt-E-Mail
+      selector:
+        text:
+    phone:
+      name: Telefonnummer
+      selector:
+        text:

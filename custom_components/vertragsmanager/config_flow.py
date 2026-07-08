@@ -11,16 +11,37 @@ from .const import (
     CATEGORIES,
     CONF_AUTO_RENEW,
     CONF_CATEGORY,
+    CONF_CONTRACT_NUMBER,
     CONF_COST,
+    CONF_CUSTOMER_NUMBER,
     CONF_CYCLE,
+    CONF_DEFAULT_PAGE,
     CONF_DURATION_MONTHS,
+    CONF_EMAIL,
     CONF_NAME,
+    CONF_NOTES,
     CONF_NOTICE_DAYS,
+    CONF_NOTICE_PERIOD_TEXT,
+    CONF_PAYMENT_DAY,
+    CONF_PHONE,
+    CONF_PORTAL_URL,
     CONF_PROVIDER,
+    CONF_SHOW_IN_SIDEBAR,
     CONF_START_DATE,
     CYCLES,
+    DEFAULT_PAGE,
+    DEFAULT_SHOW_IN_SIDEBAR,
     DOMAIN,
+    PAGES,
 )
+
+
+def _text(default=vol.UNDEFINED):
+    return selector.TextSelector(
+        selector.TextSelectorConfig(
+            type=selector.TextSelectorType.TEXT,
+        )
+    ), default
 
 
 def _build_user_schema(user_input=None):
@@ -28,157 +49,87 @@ def _build_user_schema(user_input=None):
 
     return vol.Schema(
         {
-            vol.Required(
-                CONF_NAME,
-                default=user_input.get(CONF_NAME, vol.UNDEFINED),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT,
-                )
+            vol.Required(CONF_NAME, default=user_input.get(CONF_NAME, vol.UNDEFINED)): selector.TextSelector(),
+            vol.Required(CONF_CATEGORY, default=user_input.get(CONF_CATEGORY, CATEGORIES[-1])): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=CATEGORIES, mode=selector.SelectSelectorMode.DROPDOWN)
             ),
-            vol.Required(
-                CONF_CATEGORY,
-                default=user_input.get(CONF_CATEGORY, CATEGORIES[-1]),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=CATEGORIES,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
+            vol.Required(CONF_PROVIDER, default=user_input.get(CONF_PROVIDER, vol.UNDEFINED)): selector.TextSelector(),
+            vol.Required(CONF_COST, default=user_input.get(CONF_COST, vol.UNDEFINED)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=0, step=0.01, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_PROVIDER,
-                default=user_input.get(CONF_PROVIDER, vol.UNDEFINED),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT,
-                )
+            vol.Required(CONF_CYCLE, default=user_input.get(CONF_CYCLE, CYCLES[0])): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=CYCLES, mode=selector.SelectSelectorMode.DROPDOWN)
             ),
-            vol.Required(
-                CONF_COST,
-                default=user_input.get(CONF_COST, vol.UNDEFINED),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0,
-                    step=0.01,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
+            vol.Required(CONF_START_DATE, default=user_input.get(CONF_START_DATE, vol.UNDEFINED)): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.DATE)
             ),
-            vol.Required(
-                CONF_CYCLE,
-                default=user_input.get(CONF_CYCLE, CYCLES[0]),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=CYCLES,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
+            vol.Required(CONF_NOTICE_DAYS, default=user_input.get(CONF_NOTICE_DAYS, 30)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=0, step=1, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_START_DATE,
-                default=user_input.get(CONF_START_DATE, vol.UNDEFINED),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.DATE,
-                )
+            vol.Required(CONF_DURATION_MONTHS, default=user_input.get(CONF_DURATION_MONTHS, 12)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=1, step=1, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_NOTICE_DAYS,
-                default=user_input.get(CONF_NOTICE_DAYS, 30),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0,
-                    step=1,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
+            vol.Required(CONF_AUTO_RENEW, default=user_input.get(CONF_AUTO_RENEW, True)): selector.BooleanSelector(),
+            vol.Optional(CONF_CONTRACT_NUMBER, default=user_input.get(CONF_CONTRACT_NUMBER, "")): selector.TextSelector(),
+            vol.Optional(CONF_CUSTOMER_NUMBER, default=user_input.get(CONF_CUSTOMER_NUMBER, "")): selector.TextSelector(),
+            vol.Optional(CONF_NOTICE_PERIOD_TEXT, default=user_input.get(CONF_NOTICE_PERIOD_TEXT, "")): selector.TextSelector(),
+            vol.Optional(CONF_PAYMENT_DAY, default=user_input.get(CONF_PAYMENT_DAY, "")): selector.TextSelector(),
+            vol.Optional(CONF_NOTES, default=user_input.get(CONF_NOTES, "")): selector.TextSelector(
+                selector.TextSelectorConfig(multiline=True)
             ),
-            vol.Required(
-                CONF_DURATION_MONTHS,
-                default=user_input.get(CONF_DURATION_MONTHS, 12),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1,
-                    step=1,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
-            ),
-            vol.Required(
-                CONF_AUTO_RENEW,
-                default=user_input.get(CONF_AUTO_RENEW, True),
-            ): selector.BooleanSelector()
+            vol.Optional(CONF_PORTAL_URL, default=user_input.get(CONF_PORTAL_URL, "")): selector.TextSelector(),
+            vol.Optional(CONF_EMAIL, default=user_input.get(CONF_EMAIL, "")): selector.TextSelector(),
+            vol.Optional(CONF_PHONE, default=user_input.get(CONF_PHONE, "")): selector.TextSelector(),
         }
     )
 
 
-def _build_options_schema(current: dict):
+def _build_options_schema(current):
     return vol.Schema(
         {
             vol.Required(
-                CONF_CATEGORY,
-                default=current.get(CONF_CATEGORY, CATEGORIES[-1]),
+                CONF_SHOW_IN_SIDEBAR,
+                default=current.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR),
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_DEFAULT_PAGE,
+                default=current.get(CONF_DEFAULT_PAGE, DEFAULT_PAGE),
             ): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=CATEGORIES,
+                    options=PAGES,
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
-            vol.Required(
-                CONF_PROVIDER,
-                default=current.get(CONF_PROVIDER, vol.UNDEFINED),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.TEXT,
-                )
+            vol.Required(CONF_CATEGORY, default=current.get(CONF_CATEGORY, CATEGORIES[-1])): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=CATEGORIES, mode=selector.SelectSelectorMode.DROPDOWN)
             ),
-            vol.Required(
-                CONF_COST,
-                default=current.get(CONF_COST, vol.UNDEFINED),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0,
-                    step=0.01,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
+            vol.Required(CONF_PROVIDER, default=current.get(CONF_PROVIDER, vol.UNDEFINED)): selector.TextSelector(),
+            vol.Required(CONF_COST, default=current.get(CONF_COST, vol.UNDEFINED)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=0, step=0.01, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_CYCLE,
-                default=current.get(CONF_CYCLE, CYCLES[0]),
-            ): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=CYCLES,
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
+            vol.Required(CONF_CYCLE, default=current.get(CONF_CYCLE, CYCLES[0])): selector.SelectSelector(
+                selector.SelectSelectorConfig(options=CYCLES, mode=selector.SelectSelectorMode.DROPDOWN)
             ),
-            vol.Required(
-                CONF_START_DATE,
-                default=current.get(CONF_START_DATE, vol.UNDEFINED),
-            ): selector.TextSelector(
-                selector.TextSelectorConfig(
-                    type=selector.TextSelectorType.DATE,
-                )
+            vol.Required(CONF_START_DATE, default=current.get(CONF_START_DATE, vol.UNDEFINED)): selector.TextSelector(
+                selector.TextSelectorConfig(type=selector.TextSelectorType.DATE)
             ),
-            vol.Required(
-                CONF_NOTICE_DAYS,
-                default=current.get(CONF_NOTICE_DAYS, 30),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=0,
-                    step=1,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
+            vol.Required(CONF_NOTICE_DAYS, default=current.get(CONF_NOTICE_DAYS, 30)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=0, step=1, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_DURATION_MONTHS,
-                default=current.get(CONF_DURATION_MONTHS, 12),
-            ): selector.NumberSelector(
-                selector.NumberSelectorConfig(
-                    min=1,
-                    step=1,
-                    mode=selector.NumberSelectorMode.BOX,
-                )
+            vol.Required(CONF_DURATION_MONTHS, default=current.get(CONF_DURATION_MONTHS, 12)): selector.NumberSelector(
+                selector.NumberSelectorConfig(min=1, step=1, mode=selector.NumberSelectorMode.BOX)
             ),
-            vol.Required(
-                CONF_AUTO_RENEW,
-                default=current.get(CONF_AUTO_RENEW, True),
-            ): selector.BooleanSelector()
+            vol.Required(CONF_AUTO_RENEW, default=current.get(CONF_AUTO_RENEW, True)): selector.BooleanSelector(),
+            vol.Optional(CONF_CONTRACT_NUMBER, default=current.get(CONF_CONTRACT_NUMBER, "")): selector.TextSelector(),
+            vol.Optional(CONF_CUSTOMER_NUMBER, default=current.get(CONF_CUSTOMER_NUMBER, "")): selector.TextSelector(),
+            vol.Optional(CONF_NOTICE_PERIOD_TEXT, default=current.get(CONF_NOTICE_PERIOD_TEXT, "")): selector.TextSelector(),
+            vol.Optional(CONF_PAYMENT_DAY, default=current.get(CONF_PAYMENT_DAY, "")): selector.TextSelector(),
+            vol.Optional(CONF_NOTES, default=current.get(CONF_NOTES, "")): selector.TextSelector(
+                selector.TextSelectorConfig(multiline=True)
+            ),
+            vol.Optional(CONF_PORTAL_URL, default=current.get(CONF_PORTAL_URL, "")): selector.TextSelector(),
+            vol.Optional(CONF_EMAIL, default=current.get(CONF_EMAIL, "")): selector.TextSelector(),
+            vol.Optional(CONF_PHONE, default=current.get(CONF_PHONE, "")): selector.TextSelector(),
         }
     )
 
@@ -217,7 +168,7 @@ class VertragsmanagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class VertragsmanagerOptionsFlow(config_entries.OptionsFlow):
-    """Erlaubt das Bearbeiten eines bestehenden Vertrags."""
+    """Erlaubt das Bearbeiten eines bestehenden Vertrags und Panel-Optionen."""
 
     def __init__(self, config_entry) -> None:
         self.config_entry = config_entry

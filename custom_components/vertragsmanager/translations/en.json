@@ -9,30 +9,48 @@
           "provider": "Provider",
           "cost": "Cost per cycle",
           "cycle": "Billing cycle",
-          "start_date": "Contract start (YYYY-MM-DD)",
+          "start_date": "Contract start",
           "notice_days": "Notice period (days)",
           "duration_months": "Duration (months)",
-          "auto_renew": "Auto-renew"
+          "auto_renew": "Auto-renew",
+          "contract_number": "Contract number",
+          "customer_number": "Customer number",
+          "notice_period_text": "Notice period as text",
+          "payment_day": "Payment day",
+          "notes": "Notes",
+          "portal_url": "Portal URL",
+          "email": "Email",
+          "phone": "Phone"
         }
       }
     },
     "error": {
-      "invalid_date": "Please use date format YYYY-MM-DD"
+      "invalid_date": "Please select a valid date"
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Edit contract",
+        "title": "Configure contract and panel",
         "data": {
+          "show_in_sidebar": "Show in navigation",
+          "default_page": "Panel start page",
           "category": "Category",
           "provider": "Provider",
           "cost": "Cost per cycle",
           "cycle": "Billing cycle",
-          "start_date": "Contract start (YYYY-MM-DD)",
+          "start_date": "Contract start",
           "notice_days": "Notice period (days)",
           "duration_months": "Duration (months)",
-          "auto_renew": "Auto-renew"
+          "auto_renew": "Auto-renew",
+          "contract_number": "Contract number",
+          "customer_number": "Customer number",
+          "notice_period_text": "Notice period as text",
+          "payment_day": "Payment day",
+          "notes": "Notes",
+          "portal_url": "Portal URL",
+          "email": "Email",
+          "phone": "Phone"
         }
       }
     }
