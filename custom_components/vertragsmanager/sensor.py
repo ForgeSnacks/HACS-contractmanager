@@ -93,7 +93,7 @@ class VertragSensorEntity(CoordinatorEntity, SensorEntity):
             manufacturer=contract.provider,
             model=contract.category,
             serial_number=serial or None,
-            sw_version="0.6.1",
+            sw_version="0.7.0",
             configuration_url=config_url,
         )
 
