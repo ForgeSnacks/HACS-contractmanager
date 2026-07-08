@@ -107,6 +107,23 @@ class VertragsmanagerPanel extends HTMLElement {
     });
   }
 
+  _escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  _displayName(name) {
+    return String(name || "").replace(/\s*Kündigungsfrist\s*$/i, "").replace(/\s*Frist\s*$/i, "").trim();
+  }
+
+  _contractKeyFromInput(raw) {
+    return String(raw || "").trim().toLowerCase().replace(/[^a-z0-9äöüß]+/gi, "_").replace(/^_+|_+$/g, "");
+  }
+
   _isPrimaryContractSensor(state) {
     return state.entity_id.startsWith("sensor.vertragsmanager_") && state.entity_id.endsWith("_frist") && state.attributes.deadline_date;
   }
@@ -132,7 +149,7 @@ class VertragsmanagerPanel extends HTMLElement {
         return {
           entity_id: state.entity_id,
           key: contractKey,
-          name: this._deviceNameFromState(state),
+          name: this._displayName(this._deviceNameFromState(state)),
           provider: state.attributes.provider || "",
           category: state.attributes.category || "",
           monthlyCost: Number(monthly?.state || 0),
@@ -263,6 +280,34 @@ class VertragsmanagerPanel extends HTMLElement {
     `;
   }
 
+  renderAddForm() {
+    return `
+      <div class="card">
+        <h3>Vertrag hinzufügen</h3>
+        <form id="contract-form">
+          <div class="grid">
+            <label>Name<input name="name" required></label>
+            <label>Anbieter<input name="provider"></label>
+            <label>Kategorie<input name="category"></label>
+            <label>Kosten<input name="cost" type="number" step="0.01" required></label>
+            <label>Zyklus<select name="cycle"><option value="monatlich">monatlich</option><option value="jährlich">jährlich</option></select></label>
+            <label>Startdatum<input name="start_date" type="date" required></label>
+          </div>
+          <div class="grid">
+            <label>Laufzeit Monate<input name="duration_months" type="number" min="1" required></label>
+            <label>Kündigungsfrist Tage<input name="notice_days" type="number" min="0" required></label>
+            <label>Automatisch verlängern<select name="auto_renew"><option value="ja">ja</option><option value="nein">nein</option></select></label>
+            <label>Vertragsnummer<input name="contract_number"></label>
+            <label>Kundennummer<input name="customer_number"></label>
+            <label>Zahlungstag<input name="payment_day" type="number" min="1" max="31"></label>
+          </div>
+          <button type="submit">Speichern</button>
+        </form>
+        <p class="hint">Das Formular ist wieder aktiv; die tatsächliche Speicherung muss an deinen bestehenden Setup-Handler angebunden sein.</p>
+      </div>
+    `;
+  }
+
   renderDeadlines(contracts) {
     return `
       <div class="card">
@@ -288,7 +333,7 @@ class VertragsmanagerPanel extends HTMLElement {
     if (this._page === "contracts") content = this.renderContracts(contracts);
     if (this._page === "costs") content = this.renderCosts(contracts);
     if (this._page === "deadlines") content = this.renderDeadlines(contracts);
-    if (this._page === "add") content = `<div class="card"><h3>Vertrag hinzufügen</h3><p class="hint">Formular kommt im nächsten Schritt.</p></div>`;
+    if (this._page === "add") content = this.renderAddForm();
     this.querySelector("#content").innerHTML = content;
   }
 }
