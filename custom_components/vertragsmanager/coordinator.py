@@ -68,28 +68,28 @@ class VertragData:
 
 def _add_months(source: date, months: int) -> date:
     """Addiert Monate zu einem Datum."""
-    month = source.month - 1 + months
+    month = source.month - 1 + int(months)
     year = source.year + month // 12
     month = month % 12 + 1
     day = min(
         source.day,
         [31, 29 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 28,
-         31, 30, 31, 30, 31, 31, 30, 31, 30, 31][month - 1],
+         31, 30, 31, 30, 31, 31, 30, 31, 30, 31][int(month) - 1],
     )
     return date(year, month, day)
 
 
 def _calc_next_renewal(start: date, duration_months: int, today: date) -> date:
     """Berechnet nächstes Verlängerungsdatum."""
-    renewal = _add_months(start, duration_months)
+    renewal = _add_months(start, int(duration_months))
     while renewal < today:
-        renewal = _add_months(renewal, duration_months)
+        renewal = _add_months(renewal, int(duration_months))
     return renewal
 
 
 def _calc_deadline(renewal: date, notice_days: int) -> date:
     """Berechnet Kündigungsfrist-Datum."""
-    return renewal - timedelta(days=notice_days)
+    return renewal - timedelta(days=int(notice_days))
 
 
 @dataclass
@@ -147,20 +147,20 @@ class VertragsmanagerCoordinator(DataUpdateCoordinator[VertragsmanagerData]):
             name=data[CONF_NAME],
             category=data[CONF_CATEGORY],
             provider=data[CONF_PROVIDER],
-            cost=data[CONF_COST],
+            cost=float(data[CONF_COST]),
             cycle=data[CONF_CYCLE],
             start_date=data[CONF_START_DATE],
-            notice_days=data[CONF_NOTICE_DAYS],
-            duration_months=data[CONF_DURATION_MONTHS],
-            auto_renew=data[CONF_AUTO_RENEW],
-            contract_number=data.get(CONF_CONTRACT_NUMBER, ""),
-            customer_number=data.get(CONF_CUSTOMER_NUMBER, ""),
-            notice_period_text=data.get(CONF_NOTICE_PERIOD_TEXT, ""),
-            payment_day=data.get(CONF_PAYMENT_DAY, ""),
-            notes=data.get(CONF_NOTES, ""),
-            portal_url=data.get(CONF_PORTAL_URL, ""),
-            email=data.get(CONF_EMAIL, ""),
-            phone=data.get(CONF_PHONE, ""),
+            notice_days=int(data[CONF_NOTICE_DAYS]),
+            duration_months=int(data[CONF_DURATION_MONTHS]),
+            auto_renew=bool(data[CONF_AUTO_RENEW]),
+            contract_number=str(data.get(CONF_CONTRACT_NUMBER, "")),
+            customer_number=str(data.get(CONF_CUSTOMER_NUMBER, "")),
+            notice_period_text=str(data.get(CONF_NOTICE_PERIOD_TEXT, "")),
+            payment_day=str(data.get(CONF_PAYMENT_DAY, "")),
+            notes=str(data.get(CONF_NOTES, "")),
+            portal_url=str(data.get(CONF_PORTAL_URL, "")),
+            email=str(data.get(CONF_EMAIL, "")),
+            phone=str(data.get(CONF_PHONE, "")),
         )
         self.data.contracts[entry_id] = contract
         # Daten sofort aktualisieren
