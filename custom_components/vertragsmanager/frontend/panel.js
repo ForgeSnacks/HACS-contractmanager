@@ -19,13 +19,24 @@ class VertragsmanagerPanel extends HTMLElement {
       <style>
         :host {
           display: block;
-          padding: 16px;
-          background: var(--primary-background-color);
+          background: transparent;
           color: var(--primary-text-color);
           font-family: var(--primary-font-family);
         }
-        .wrap { max-width: 1440px; margin: 0 auto; }
-        .nav { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .wrap {
+          max-width: 1440px;
+          margin: 0 auto;
+          padding: 24px;
+          background: var(--card-background-color);
+          border-radius: 12px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-bottom: 20px;
+        }
         .nav button {
           border: 1px solid var(--divider-color);
           background: var(--card-background-color);
@@ -51,13 +62,18 @@ class VertragsmanagerPanel extends HTMLElement {
           gap: 16px;
         }
         .card {
-          background: var(--card-background-color);
+          background: var(--card-background-color, #ffffff);
           border: 1px solid var(--divider-color);
           border-radius: 12px;
           padding: 16px;
         }
-        .value { font-size: 1.8rem; font-weight: 700; }
-        .hint { color: var(--secondary-text-color); }
+        .value {
+          font-size: 1.8rem;
+          font-weight: 700;
+        }
+        .hint {
+          color: var(--secondary-text-color);
+        }
         .bar-row {
           display: grid;
           grid-template-columns: 180px 1fr 80px;
@@ -71,24 +87,36 @@ class VertragsmanagerPanel extends HTMLElement {
           overflow: hidden;
           background: rgba(120,120,120,0.18);
         }
-        .bar > div { height: 100%; background: var(--primary-color); }
-        table { width: 100%; border-collapse: collapse; }
+        .bar > div {
+          height: 100%;
+          background: var(--primary-color);
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+        }
         th, td {
           text-align: left;
           padding: 10px 8px;
           border-bottom: 1px solid var(--divider-color);
         }
-        form { display: grid; gap: 12px; }
+        form {
+          display: grid;
+          gap: 12px;
+        }
         input, select, textarea {
           width: 100%;
           padding: 10px 12px;
           border-radius: 10px;
           border: 1px solid var(--divider-color);
-          background: var(--card-background-color);
+          background: var(--card-background-color, #ffffff);
           color: var(--primary-text-color);
           box-sizing: border-box;
         }
-        textarea { min-height: 100px; resize: vertical; }
+        textarea {
+          min-height: 100px;
+          resize: vertical;
+        }
         .primary {
           background: var(--primary-color);
           color: white;
@@ -97,10 +125,18 @@ class VertragsmanagerPanel extends HTMLElement {
           border-radius: 10px;
           cursor: pointer;
         }
-        .actions { display: flex; gap: 12px; align-items: center; }
+        .actions {
+          display: flex;
+          gap: 12px;
+          align-items: center;
+        }
         @media (max-width: 900px) {
-          .split { grid-template-columns: 1fr; }
-          .bar-row { grid-template-columns: 1fr; }
+          .split {
+            grid-template-columns: 1fr;
+          }
+          .bar-row {
+            grid-template-columns: 1fr;
+          }
         }
       </style>
       <div class="wrap">
@@ -123,8 +159,8 @@ class VertragsmanagerPanel extends HTMLElement {
   contracts() {
     return Object.values(this._hass.states)
       .filter((state) => 
-        state.entity_id.startsWith("sensor.vertragsmanager_") && 
-        state.entity_id.endsWith("_frist") &&
+        (state.entity_id.startsWith("sensor.vertragsmanager_") || 
+         (state.entity_id.startsWith("sensor.") && state.entity_id.endsWith("_frist"))) &&
         state.attributes.deadline_date
       )
       .map((state) => ({
