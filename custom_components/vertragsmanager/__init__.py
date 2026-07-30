@@ -115,9 +115,9 @@ async def _ensure_static_path(hass: HomeAssistant) -> None:
     hass.data[STATIC_REGISTERED_KEY] = True
 
 
-async def _remove_panel_if_exists(hass: HomeAssistant) -> None:
+def _remove_panel_if_exists(hass: HomeAssistant) -> None:
     """Bereits vorhandenes Panel entfernen."""
-    await frontend.async_remove_panel(hass, PANEL_URL_PATH)
+    frontend.async_remove_panel(hass, PANEL_URL_PATH)
 
 
 async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -131,7 +131,7 @@ async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
     show_in_sidebar = options.get(CONF_SHOW_IN_SIDEBAR, DEFAULT_SHOW_IN_SIDEBAR)
     default_page = options.get(CONF_DEFAULT_PAGE, DEFAULT_PAGE)
 
-    await _remove_panel_if_exists(hass)
+    _remove_panel_if_exists(hass)
 
     frontend.async_register_built_in_panel(
         hass,
@@ -249,7 +249,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not remaining:
         if hass.services.has_service(DOMAIN, SERVICE_CREATE_CONTRACT):
             hass.services.async_remove(DOMAIN, SERVICE_CREATE_CONTRACT)
-        await _remove_panel_if_exists(hass)
+        _remove_panel_if_exists(hass)
         hass.data.pop(SUMMARY_ADDED_KEY, None)
         hass.data[PANEL_REGISTERED_KEY] = False
         if COORDINATOR_KEY in hass.data:
