@@ -53,6 +53,9 @@
           "phone": "Phone"
         }
       }
+    },
+    "error": {
+      "invalid_date": "Please select a valid date"
     }
   },
   "entity": {

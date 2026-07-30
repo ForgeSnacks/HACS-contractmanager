@@ -59,3 +59,5 @@ PANEL_ICON: Final = "mdi:file-document-multiple-outline"
 PANEL_COMPONENT_NAME: Final = "custom"
 PANEL_NAME: Final = "vertragsmanager-panel"
 PANEL_JS_URL: Final = "/api/vertragsmanager/frontend/panel.js"
+
+SUMMARY_ADDED_KEY: Final = f"{DOMAIN}_summary_added"

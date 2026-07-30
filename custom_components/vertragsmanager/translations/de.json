@@ -53,6 +53,9 @@
           "phone": "Telefon"
         }
       }
+    },
+    "error": {
+      "invalid_date": "Bitte ein gültiges Datum auswählen"
     }
   },
   "entity": {

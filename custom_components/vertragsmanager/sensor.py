@@ -14,6 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_NAME,
     DOMAIN,
+    SUMMARY_ADDED_KEY,
 )
 from .coordinator import (
     VertragData,
@@ -22,18 +23,26 @@ from .coordinator import (
     _calc_next_renewal,
 )
 
-SUMMARY_UNIQUE_ID = "vertragsmanager_gesamtkosten"
+SUMMARY_UNIQUE_ID = f"{DOMAIN}_gesamtkosten"
+
+
+_RE_AE = re.compile(r'[äáàâã]')
+_RE_OE = re.compile(r'[öóòôõ]')
+_RE_UE = re.compile(r'[üúùû]')
+_RE_SS = re.compile(r'[ß]')
+_RE_INVALID = re.compile(r'[^a-z0-9]+')
+_RE_MULTI_UNDERSCORE = re.compile(r'_+')
 
 
 def _slugify(text: str) -> str:
     """Macht aus Text einen slug."""
     text = text.lower().strip()
-    text = re.sub(r'[äáàâã]', 'a', text)
-    text = re.sub(r'[öóòôõ]', 'o', text)
-    text = re.sub(r'[üúùû]', 'u', text)
-    text = re.sub(r'[ß]', 'ss', text)
-    text = re.sub(r'[^a-z0-9]+', '_', text)
-    text = re.sub(r'_+', '_', text)
+    text = _RE_AE.sub('a', text)
+    text = _RE_OE.sub('o', text)
+    text = _RE_UE.sub('u', text)
+    text = _RE_SS.sub('ss', text)
+    text = _RE_INVALID.sub('_', text)
+    text = _RE_MULTI_UNDERSCORE.sub('_', text)
     return text.strip('_')
 
 
@@ -63,10 +72,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
-    summary_key = f"{DOMAIN}_summary_added"
-    if not hass.data.get(summary_key):
+    if not hass.data.get(SUMMARY_ADDED_KEY):
         async_add_entities([GesamtkostenSensorEntity(coordinator)])
-        hass.data[summary_key] = True
+        hass.data[SUMMARY_ADDED_KEY] = True
 
 
 class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
@@ -294,7 +302,8 @@ class GesamtkostenSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:cash-multiple"
     _attr_native_unit_of_measurement = "EUR"
-    _attr_name = "Vertragsmanager Gesamtkosten"
+    _attr_has_entity_name = True
+    _attr_translation_key = "gesamtkosten"
     _attr_unique_id = SUMMARY_UNIQUE_ID
 
     def __init__(self, coordinator: VertragsmanagerCoordinator) -> None:
@@ -309,6 +318,6 @@ class GesamtkostenSensorEntity(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict:
         coordinator: VertragsmanagerCoordinator = self.coordinator
         return {
-            "anzahl_verträge": coordinator.data.contract_count,
-            "verträge": [c.name for c in coordinator.data.contracts.values()],
+            "anzahl_vertraege": coordinator.data.contract_count,
+            "vertraege": [c.name for c in coordinator.data.contracts.values()],
         }

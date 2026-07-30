@@ -189,7 +189,8 @@ class VertragsmanagerOptionsFlow(config_entries.OptionsFlow):
                 errors["base"] = "invalid_date"
 
             if not errors:
-                return self.async_create_entry(title="", data=user_input)
+                title = user_input.get(CONF_NAME, self.config_entry.title)
+                return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
             step_id="init",

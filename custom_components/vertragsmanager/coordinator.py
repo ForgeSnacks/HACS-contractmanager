@@ -121,7 +121,10 @@ class VertragsmanagerData:
         """
         result: list[tuple[VertragData, date, date]] = []
         for contract in self.contracts.values():
-            start = date.fromisoformat(contract.start_date)
+            try:
+                start = date.fromisoformat(contract.start_date)
+            except ValueError:
+                continue
             renewal = _calc_next_renewal(start, contract.duration_months, today)
             deadline = _calc_deadline(renewal, contract.notice_days)
             result.append((contract, renewal, deadline))
