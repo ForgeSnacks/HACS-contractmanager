@@ -1,3 +1,4 @@
+(function() {
 class VertragsmanagerPanel extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
@@ -319,3 +320,4 @@ class VertragsmanagerPanel extends HTMLElement {
 if (!customElements.get("vertragsmanager-panel")) {
   customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
 }
+})();

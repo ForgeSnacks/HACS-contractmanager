@@ -117,6 +117,8 @@ async def _ensure_static_path(hass: HomeAssistant) -> None:
 
 def _remove_panel_if_exists(hass: HomeAssistant) -> None:
     """Bereits vorhandenes Panel entfernen."""
+    if not hass.data.get(PANEL_REGISTERED_KEY):
+        return
     frontend.async_remove_panel(hass, PANEL_URL_PATH)
 
 

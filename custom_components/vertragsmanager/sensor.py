@@ -64,11 +64,6 @@ async def async_setup_entry(
         VertragNochZuZahlenSensorEntity(coordinator, entry.entry_id, name_slug),
     ]
     
-    # Entity IDs explizit setzen: sensor.vertragsmanager_{name}_{suffix}
-    for entity in entities:
-        suffix = entity._attr_unique_id.split('_')[-1]
-        entity.entity_id = f"sensor.{DOMAIN}_{name_slug}_{suffix}"
-    
     async_add_entities(entities)
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
@@ -89,7 +84,7 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_frist"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_frist"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -128,7 +123,7 @@ class VertragPreisProMonatSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_monatskosten"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_monatskosten"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -163,7 +158,7 @@ class VertragBereitsGezahltSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_bereits_gezahlt"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_bereits_gezahlt"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -207,7 +202,7 @@ class VertragNochZuZahlenSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_noch_zu_zahlen"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_noch_zu_zahlen"
 
     @property
     def _contract(self) -> VertragData | None:
