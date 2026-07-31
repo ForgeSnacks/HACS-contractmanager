@@ -6,6 +6,7 @@ class VertragsmanagerPanel extends HTMLElement {
       this._initialized = true;
       this._page = this._initialPage();
       this.renderShell();
+      console.log("[Vertragsmanager] Panel initialisiert, page =", this._page, ", hass.connection vorhanden:", Boolean(hass?.connection));
     }
     this.render();
   }
@@ -106,6 +107,18 @@ class VertragsmanagerPanel extends HTMLElement {
       window.history.replaceState({}, "", url);
       this.render();
     });
+
+    this.querySelector("#content").addEventListener("click", (ev) => {
+      const addBtn = ev.target.closest("#add-btn");
+      if (!addBtn) return;
+      this._navigateToAddIntegration();
+    });
+  }
+
+  _navigateToAddIntegration() {
+    const path = "/config/integrations/dashboard/add?domain=vertragsmanager";
+    history.pushState(null, "", path);
+    window.dispatchEvent(new CustomEvent("location-changed", { bubbles: true, composed: true }));
   }
 
   _escapeHtml(value) {
@@ -147,7 +160,13 @@ class VertragsmanagerPanel extends HTMLElement {
     const sensors = Object.values(this._hass.states)
       .filter((state) => this._isPrimaryContractSensor(state));
     if (!sensors.length) {
-      console.debug("[Vertragsmanager] Keine Vertrags-Sensoren in hass.states gefunden.");
+      console.log(
+        "[Vertragsmanager] Keine Vertrags-Sensoren in hass.states gefunden.",
+        "Sensor-IDs vorhanden:",
+        Object.keys(this._hass.states).filter((id) => id.startsWith("sensor.")).slice(0, 20)
+      );
+    } else {
+      console.log("[Vertragsmanager] Vertrags-Sensoren gefunden:", sensors.map((s) => s.entity_id));
     }
     return sensors
       .map((state) => {
@@ -316,7 +335,7 @@ class VertragsmanagerPanel extends HTMLElement {
       <div class="card">
         <h3>Vertrag / HUB hinzufügen</h3>
         <p class="hint">Öffnet den Home-Assistant-Setup-Assistenten für Vertragsmanager.</p>
-        <a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=vertragsmanager" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 14px;border-radius:10px;background:var(--primary-color);color:white;text-decoration:none;">Hinzufügen</a>
+        <button id="add-btn" style="padding:10px 14px;border-radius:10px;background:var(--primary-color);color:white;border:none;cursor:pointer;">Hinzufügen</button>
       </div>
     `;
     this.querySelector("#content").innerHTML = content;

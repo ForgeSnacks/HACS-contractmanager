@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 import re
 
 from homeassistant.components.sensor import SensorEntity
@@ -24,6 +25,8 @@ from .coordinator import (
 )
 
 SUMMARY_UNIQUE_ID = f"{DOMAIN}_gesamtkosten"
+
+_LOGGER = logging.getLogger(__name__)
 
 
 _RE_AE = re.compile(r'[äáàâã]')
@@ -65,10 +68,17 @@ async def async_setup_entry(
     ]
     
     async_add_entities(entities)
+    _LOGGER.debug(
+        "Sensoren für Vertrag '%s' angelegt (entry_id=%s): %s",
+        contract.name if contract else name_slug,
+        entry.entry_id,
+        [entity.entity_id for entity in entities],
+    )
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
     if not hass.data.get(SUMMARY_ADDED_KEY):
         async_add_entities([GesamtkostenSensorEntity(coordinator)])
+        _LOGGER.debug("Gesamtkosten-Sensor angelegt (unique_id=%s)", SUMMARY_UNIQUE_ID)
         hass.data[SUMMARY_ADDED_KEY] = True
 
 
