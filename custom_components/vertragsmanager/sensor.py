@@ -88,6 +88,7 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
     _attr_icon = "mdi:file-document-outline"
     _attr_native_unit_of_measurement = "Tage"
     _attr_has_entity_name = True
+    _attr_translation_key = "vertrag"
     _attr_name = "Kündigungsfrist"
 
     def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
@@ -266,7 +267,7 @@ def _get_device_info(coordinator: VertragsmanagerCoordinator, entry_id: str) -> 
         manufacturer=contract.provider,
         model=contract.category,
         serial_number=serial or None,
-        sw_version="0.7.0",
+        sw_version="1.0.0",
         configuration_url=config_url,
     )
 

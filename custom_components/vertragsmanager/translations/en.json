@@ -72,5 +72,23 @@
     "contract": {
       "name": "Contract"
     }
+  },
+  "issues": {
+    "start_date_in_future": {
+      "title": "Contract start date is in the future",
+      "description": "The contract \"{contract_name}\" has a start date in the future. Please check the start date."
+    },
+    "invalid_start_date": {
+      "title": "Invalid contract start date",
+      "description": "The start date of contract \"{contract_name}\" is not a valid date. Please correct the start date."
+    },
+    "negative_notice_days": {
+      "title": "Negative notice period",
+      "description": "The notice period of contract \"{contract_name}\" is negative. Please correct the notice period."
+    },
+    "invalid_duration": {
+      "title": "Invalid contract duration",
+      "description": "The duration of contract \"{contract_name}\" is invalid. Please correct the duration."
+    }
   }
 }

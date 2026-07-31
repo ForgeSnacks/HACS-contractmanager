@@ -134,12 +134,12 @@ class VertragsmanagerPanel extends HTMLElement {
     return String(name || "").replace(/\s*Kündigungsfrist\s*$/i, "").replace(/\s*Frist\s*$/i, "").trim();
   }
 
-  _contractKeyFromInput(raw) {
-    return String(raw || "").trim().toLowerCase().replace(/[^a-z0-9äöüß]+/gi, "_").replace(/^_+|_+$/g, "");
-  }
-
   _isPrimaryContractSensor(state) {
-    return state.entity_id.startsWith("sensor.") && state.attributes.deadline_date;
+    return (
+      state.entity_id.startsWith("sensor.") &&
+      /(_frist|_kundigungsfrist|_kündigungsfrist)$/i.test(state.entity_id) &&
+      state.attributes.deadline_date
+    );
   }
 
   _contractKeyFromState(state) {
@@ -175,9 +175,9 @@ class VertragsmanagerPanel extends HTMLElement {
         return {
           entity_id: state.entity_id,
           key: contractKey,
-          name: this._displayName(this._deviceNameFromState(state)),
-          provider: state.attributes.provider || "",
-          category: state.attributes.category || "",
+          name: this._escapeHtml(this._displayName(this._deviceNameFromState(state))),
+          provider: this._escapeHtml(state.attributes.provider || ""),
+          category: this._escapeHtml(state.attributes.category || ""),
           monthlyCost: Number(state.attributes.monthly_cost ?? monthly?.state ?? 0),
           deadlineDays: Number(state.state || 0),
           deadlineDate: state.attributes.deadline_date || "",
