@@ -126,11 +126,13 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 
   _isPrimaryContractSensor(state) {
-    return state.entity_id.startsWith("sensor.vertragsmanager_") && state.entity_id.endsWith("_frist") && state.attributes.deadline_date;
+    return state.entity_id.startsWith("sensor.") && state.attributes.deadline_date;
   }
 
   _contractKeyFromState(state) {
-    return state.entity_id.replace(/^sensor\.vertragsmanager_/, "").replace(/_frist$/, "");
+    return state.entity_id
+      .replace(/^sensor\./, "")
+      .replace(/(_kundigungsfrist|_kündigungsfrist|_frist)$/i, "");
   }
 
   _deviceNameFromState(state) {
@@ -142,8 +144,12 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 
   contracts() {
-    return Object.values(this._hass.states)
-      .filter((state) => this._isPrimaryContractSensor(state))
+    const sensors = Object.values(this._hass.states)
+      .filter((state) => this._isPrimaryContractSensor(state));
+    if (!sensors.length) {
+      console.debug("[Vertragsmanager] Keine Vertrags-Sensoren in hass.states gefunden.");
+    }
+    return sensors
       .map((state) => {
         const contractKey = this._contractKeyFromState(state);
         const monthly = this._findMonthlyState(contractKey);
@@ -153,7 +159,7 @@ class VertragsmanagerPanel extends HTMLElement {
           name: this._displayName(this._deviceNameFromState(state)),
           provider: state.attributes.provider || "",
           category: state.attributes.category || "",
-          monthlyCost: Number(monthly?.state || 0),
+          monthlyCost: Number(state.attributes.monthly_cost ?? monthly?.state ?? 0),
           deadlineDays: Number(state.state || 0),
           deadlineDate: state.attributes.deadline_date || "",
           renewalDate: state.attributes.next_renewal || "",

@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date
+import logging
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,8 @@ STATIC_REGISTERED_KEY = f"{DOMAIN}_static_registered"
 PANEL_REGISTERED_KEY = f"{DOMAIN}_panel_registered"
 COORDINATOR_KEY = f"{DOMAIN}_coordinator"
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass
 class VertragsmanagerRuntimeData:
@@ -111,6 +114,9 @@ async def _ensure_static_path(hass: HomeAssistant) -> None:
             )
         ]
     )
+    _LOGGER.debug(
+        "Statische Frontend-Pfade registriert: %s -> %s", STATIC_FRONTEND_PATH, frontend_dir
+    )
 
     hass.data[STATIC_REGISTERED_KEY] = True
 
@@ -135,6 +141,14 @@ async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
     _remove_panel_if_exists(hass)
 
+    _LOGGER.debug(
+        "Registriere Panel url=%s title=%s sidebar=%s page=%s js_url=%s",
+        PANEL_URL_PATH,
+        PANEL_TITLE,
+        show_in_sidebar,
+        default_page,
+        PANEL_JS_URL,
+    )
     frontend.async_register_built_in_panel(
         hass,
         component_name=PANEL_COMPONENT_NAME,
@@ -151,6 +165,7 @@ async def _register_panel(hass: HomeAssistant, entry: ConfigEntry) -> None:
         },
         require_admin=False,
     )
+    _LOGGER.debug("Panel registriert: %s", PANEL_URL_PATH)
 
     hass.data[PANEL_REGISTERED_KEY] = True
 

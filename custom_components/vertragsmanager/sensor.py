@@ -85,6 +85,7 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
         self._entry_id = entry_id
         self._name_slug = name_slug
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_frist"
+        self.entity_id = f"sensor.{DOMAIN}_{name_slug}_frist"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -124,6 +125,7 @@ class VertragPreisProMonatSensorEntity(CoordinatorEntity, SensorEntity):
         self._entry_id = entry_id
         self._name_slug = name_slug
         self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_monatskosten"
+        self.entity_id = f"sensor.{DOMAIN}_{name_slug}_monatskosten"
 
     @property
     def _contract(self) -> VertragData | None:
