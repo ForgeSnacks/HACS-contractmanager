@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import date
+import logging
 import re
 
 from homeassistant.components.sensor import SensorEntity
@@ -14,6 +15,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import (
     CONF_NAME,
     DOMAIN,
+    SUMMARY_ADDED_KEY,
 )
 from .coordinator import (
     VertragData,
@@ -22,18 +24,28 @@ from .coordinator import (
     _calc_next_renewal,
 )
 
-SUMMARY_UNIQUE_ID = "vertragsmanager_gesamtkosten"
+SUMMARY_UNIQUE_ID = f"{DOMAIN}_gesamtkosten"
+
+_LOGGER = logging.getLogger(__name__)
+
+
+_RE_AE = re.compile(r'[äáàâã]')
+_RE_OE = re.compile(r'[öóòôõ]')
+_RE_UE = re.compile(r'[üúùû]')
+_RE_SS = re.compile(r'[ß]')
+_RE_INVALID = re.compile(r'[^a-z0-9]+')
+_RE_MULTI_UNDERSCORE = re.compile(r'_+')
 
 
 def _slugify(text: str) -> str:
     """Macht aus Text einen slug."""
     text = text.lower().strip()
-    text = re.sub(r'[äáàâã]', 'a', text)
-    text = re.sub(r'[öóòôõ]', 'o', text)
-    text = re.sub(r'[üúùû]', 'u', text)
-    text = re.sub(r'[ß]', 'ss', text)
-    text = re.sub(r'[^a-z0-9]+', '_', text)
-    text = re.sub(r'_+', '_', text)
+    text = _RE_AE.sub('a', text)
+    text = _RE_OE.sub('o', text)
+    text = _RE_UE.sub('u', text)
+    text = _RE_SS.sub('ss', text)
+    text = _RE_INVALID.sub('_', text)
+    text = _RE_MULTI_UNDERSCORE.sub('_', text)
     return text.strip('_')
 
 
@@ -55,18 +67,19 @@ async def async_setup_entry(
         VertragNochZuZahlenSensorEntity(coordinator, entry.entry_id, name_slug),
     ]
     
-    # Entity IDs explizit setzen: sensor.vertragsmanager_{name}_{suffix}
-    for entity in entities:
-        suffix = entity._attr_unique_id.split('_')[-1]
-        entity.entity_id = f"sensor.{DOMAIN}_{name_slug}_{suffix}"
-    
     async_add_entities(entities)
+    _LOGGER.debug(
+        "Sensoren für Vertrag '%s' angelegt (entry_id=%s): %s",
+        contract.name if contract else name_slug,
+        entry.entry_id,
+        [entity.entity_id for entity in entities],
+    )
 
     # Gesamtkosten-Sensor nur einmal hinzufügen
-    summary_key = f"{DOMAIN}_summary_added"
-    if not hass.data.get(summary_key):
+    if not hass.data.get(SUMMARY_ADDED_KEY):
         async_add_entities([GesamtkostenSensorEntity(coordinator)])
-        hass.data[summary_key] = True
+        _LOGGER.debug("Gesamtkosten-Sensor angelegt (unique_id=%s)", SUMMARY_UNIQUE_ID)
+        hass.data[SUMMARY_ADDED_KEY] = True
 
 
 class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
@@ -75,13 +88,15 @@ class VertragLaufzeitSensorEntity(CoordinatorEntity, SensorEntity):
     _attr_icon = "mdi:file-document-outline"
     _attr_native_unit_of_measurement = "Tage"
     _attr_has_entity_name = True
+    _attr_translation_key = "vertrag"
     _attr_name = "Kündigungsfrist"
 
     def __init__(self, coordinator: VertragsmanagerCoordinator, entry_id: str, name_slug: str) -> None:
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_frist"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_frist"
+        self.entity_id = f"sensor.{DOMAIN}_{name_slug}_frist"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -120,7 +135,8 @@ class VertragPreisProMonatSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_monatskosten"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_monatskosten"
+        self.entity_id = f"sensor.{DOMAIN}_{name_slug}_monatskosten"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -155,7 +171,7 @@ class VertragBereitsGezahltSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_bereits_gezahlt"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_bereits_gezahlt"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -199,7 +215,7 @@ class VertragNochZuZahlenSensorEntity(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._entry_id = entry_id
         self._name_slug = name_slug
-        self._attr_unique_id = f"{DOMAIN}_{name_slug}_noch_zu_zahlen"
+        self._attr_unique_id = f"{DOMAIN}_{entry_id}_{name_slug}_noch_zu_zahlen"
 
     @property
     def _contract(self) -> VertragData | None:
@@ -251,7 +267,7 @@ def _get_device_info(coordinator: VertragsmanagerCoordinator, entry_id: str) -> 
         manufacturer=contract.provider,
         model=contract.category,
         serial_number=serial or None,
-        sw_version="0.7.0",
+        sw_version="1.0.0",
         configuration_url=config_url,
     )
 
@@ -294,7 +310,8 @@ class GesamtkostenSensorEntity(CoordinatorEntity, SensorEntity):
 
     _attr_icon = "mdi:cash-multiple"
     _attr_native_unit_of_measurement = "EUR"
-    _attr_name = "Vertragsmanager Gesamtkosten"
+    _attr_has_entity_name = True
+    _attr_translation_key = "gesamtkosten"
     _attr_unique_id = SUMMARY_UNIQUE_ID
 
     def __init__(self, coordinator: VertragsmanagerCoordinator) -> None:
@@ -309,6 +326,6 @@ class GesamtkostenSensorEntity(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self) -> dict:
         coordinator: VertragsmanagerCoordinator = self.coordinator
         return {
-            "anzahl_verträge": coordinator.data.contract_count,
-            "verträge": [c.name for c in coordinator.data.contracts.values()],
+            "anzahl_vertraege": coordinator.data.contract_count,
+            "vertraege": [c.name for c in coordinator.data.contracts.values()],
         }

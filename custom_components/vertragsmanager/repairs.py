@@ -12,13 +12,12 @@ from .coordinator import VertragsmanagerData
 
 async def async_process_repairs(hass: HomeAssistant, data: VertragsmanagerData) -> None:
     """Process and create repair issues for contracts with issues."""
-    issue_registry = ir.async_get(hass)
     today = date.today()
+    active_issue_ids: set[str] = set()
 
     for contract in data.contracts.values():
         issues: list[str] = []
 
-        # Check for invalid dates
         try:
             start = date.fromisoformat(contract.start_date)
             if start > today:
@@ -26,17 +25,15 @@ async def async_process_repairs(hass: HomeAssistant, data: VertragsmanagerData) 
         except ValueError:
             issues.append("invalid_start_date")
 
-        # Check for negative notice days
         if contract.notice_days < 0:
             issues.append("negative_notice_days")
 
-        # Check for invalid duration
         if contract.duration_months <= 0:
             issues.append("invalid_duration")
 
-        # Create or remove issues
         for issue in issues:
             issue_id = f"{contract.entry_id}_{issue}"
+            active_issue_ids.add(issue_id)
             ir.async_get_or_create(
                 domain=DOMAIN,
                 issue_id=issue_id,
@@ -47,10 +44,8 @@ async def async_process_repairs(hass: HomeAssistant, data: VertragsmanagerData) 
                 },
             )
 
-        # Remove resolved issues
-        existing_issues = list(ir.async_get(hass).issues.keys())
-        for issue_key in existing_issues:
-            if issue_key[0] == DOMAIN and issue_key[1].startswith(f"{contract.entry_id}_"):
-                issue_id = issue_key[1]
-                if issue_id not in [f"{contract.entry_id}_{i}" for i in issues]:
-                    ir.async_delete_issue(hass, DOMAIN, issue_id)
+    for issue_key in list(ir.async_get(hass).issues):
+        if issue_key[0] != DOMAIN:
+            continue
+        if issue_key[1] not in active_issue_ids:
+            ir.async_delete_issue(hass, DOMAIN, issue_key[1])

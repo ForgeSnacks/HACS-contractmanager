@@ -37,13 +37,35 @@ Optionale Felder:
 
 ## Features
 
-- **Sensoren**: Jeder Vertrag erstellt einen Sensor mit Kündigungsfrist in Tagen
+- **Sensoren**: Jeder Vertrag erstellt 4 Sensoren (Kündigungsfrist in Tagen, monatliche Kosten, bereits gezahlt, noch zu zahlen)
 - **Gesamtkosten-Sensor**: Summe aller monatlichen Kosten
 - **Device-Support**: Jeder Vertrag wird als eigenes Device mit Entities angezeigt
-- **Panel**: Web-UI zur Übersicht aller Verträge
+- **Panel**: Web-UI zur Übersicht aller Verträge (Übersicht, alle Verträge, Kosten, Fristen, Vertrag hinzufügen)
 - **Services**: Verträge per Service erstellen
 - **Diagnostics**: Debug-Informationen pro Config Entry
 - **Repairs**: Automatische Erkennung von Problemen (ungültige Daten, negative Fristen, etc.)
+
+## Sensoren
+
+Pro Vertrag werden vier Sensoren erstellt:
+
+| Sensor | Entity-ID | Einheit |
+|---|---|---|
+| Kündigungsfrist | `sensor.vertragsmanager_<name>_frist` | Tage |
+| Monatliche Kosten | `sensor.vertragsmanager_<name>_monatskosten` | EUR |
+| Bereits gezahlt | `sensor.vertragsmanager_<name>_bereits_gezahlt` | EUR |
+| Noch zu zahlen | `sensor.vertragsmanager_<name>_noch_zu_zahlen` | EUR |
+
+`<name>` ist der slugifizierte Vertragsname (z.B. `vodafone_internet`). Zusätzlich wird einmalig ein Gesamtkosten-Sensor angelegt.
+
+Alle Sensoren eines Vertrags liefern dieselben Attribute: Anbieter, Kategorie, Kosten, Zahlungszyklus, monatliche Kosten, Startdatum, Kündigungsfrist, Laufzeit, nächstes Verlängerungsdatum, Fristdatum, automatische Verlängerung sowie die optionalen Felder (Vertragsnummer, Kundennummer, Notizen, Portal-URL, E-Mail, Telefon, ...).
+
+### Panel-Optionen
+
+Über die Optionen einer Integration (Konfiguration → Geräte & Dienste → Vertragsmanager → Optionen) lassen sich anpassen:
+
+- **In Sidebar anzeigen**: Panel im Seitenmenü ein- oder ausblenden
+- **Startseite**: Standardseite beim Öffnen des Panels (Übersicht, Alle Verträge, Kosten, Fristen, Vertrag hinzufügen)
 
 ## Services
 

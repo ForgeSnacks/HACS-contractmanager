@@ -53,6 +53,9 @@
           "phone": "Telefon"
         }
       }
+    },
+    "error": {
+      "invalid_date": "Bitte ein gültiges Datum auswählen"
     }
   },
   "entity": {
@@ -68,6 +71,24 @@
   "device": {
     "contract": {
       "name": "Vertrag"
+    }
+  },
+  "issues": {
+    "start_date_in_future": {
+      "title": "Vertragsstart liegt in der Zukunft",
+      "description": "Der Vertrag \"{contract_name}\" hat ein Startdatum in der Zukunft. Bitte prüfe das Startdatum."
+    },
+    "invalid_start_date": {
+      "title": "Ungültiges Vertragsstartdatum",
+      "description": "Das Startdatum des Vertrags \"{contract_name}\" ist kein gültiges Datum. Bitte korrigiere das Startdatum."
+    },
+    "negative_notice_days": {
+      "title": "Negative Kündigungsfrist",
+      "description": "Die Kündigungsfrist des Vertrags \"{contract_name}\" ist negativ. Bitte korrigiere die Kündigungsfrist."
+    },
+    "invalid_duration": {
+      "title": "Ungültige Vertragslaufzeit",
+      "description": "Die Laufzeit des Vertrags \"{contract_name}\" ist ungültig. Bitte korrigiere die Laufzeit."
     }
   }
 }

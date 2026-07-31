@@ -70,6 +70,7 @@ create_contract:
           mode: box
     auto_renew:
       name: Automatische Verlängerung
+      required: true
       selector:
         boolean:
     contract_number:

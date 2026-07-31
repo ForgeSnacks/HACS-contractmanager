@@ -81,9 +81,10 @@ def _add_months(source: date, months: int) -> date:
 
 def _calc_next_renewal(start: date, duration_months: int, today: date) -> date:
     """Berechnet nächstes Verlängerungsdatum."""
-    renewal = _add_months(start, int(duration_months))
+    months = max(int(duration_months), 1)
+    renewal = _add_months(start, months)
     while renewal < today:
-        renewal = _add_months(renewal, int(duration_months))
+        renewal = _add_months(renewal, months)
     return renewal
 
 
@@ -121,7 +122,10 @@ class VertragsmanagerData:
         """
         result: list[tuple[VertragData, date, date]] = []
         for contract in self.contracts.values():
-            start = date.fromisoformat(contract.start_date)
+            try:
+                start = date.fromisoformat(contract.start_date)
+            except ValueError:
+                continue
             renewal = _calc_next_renewal(start, contract.duration_months, today)
             deadline = _calc_deadline(renewal, contract.notice_days)
             result.append((contract, renewal, deadline))

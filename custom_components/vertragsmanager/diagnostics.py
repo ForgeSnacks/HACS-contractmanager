@@ -11,16 +11,20 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = getattr(entry, "runtime_data", None)
+    coordinator = coordinator.coordinator if coordinator else None
 
-    return {
+    result: dict[str, Any] = {
         "entry": {
             "entry_id": entry.entry_id,
             "title": entry.title,
             "data": dict(entry.data),
             "options": dict(entry.options),
         },
-        "coordinator_data": {
+    }
+
+    if coordinator:
+        result["coordinator_data"] = {
             "contract_count": coordinator.data.contract_count,
             "total_monthly_cost": coordinator.data.total_monthly_cost,
             "contracts": [
@@ -33,5 +37,8 @@ async def async_get_config_entry_diagnostics(
                 }
                 for c in coordinator.data.contracts.values()
             ],
-        },
-    }
+        }
+    else:
+        result["coordinator_data"] = None
+
+    return result

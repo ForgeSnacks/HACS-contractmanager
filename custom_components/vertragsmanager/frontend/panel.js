@@ -1,3 +1,4 @@
+(function() {
 class VertragsmanagerPanel extends HTMLElement {
   set hass(hass) {
     this._hass = hass;
@@ -5,6 +6,7 @@ class VertragsmanagerPanel extends HTMLElement {
       this._initialized = true;
       this._page = this._initialPage();
       this.renderShell();
+      console.log("[Vertragsmanager] Panel initialisiert, page =", this._page, ", hass.connection vorhanden:", Boolean(hass?.connection));
     }
     this.render();
   }
@@ -105,6 +107,18 @@ class VertragsmanagerPanel extends HTMLElement {
       window.history.replaceState({}, "", url);
       this.render();
     });
+
+    this.querySelector("#content").addEventListener("click", (ev) => {
+      const addBtn = ev.target.closest("#add-btn");
+      if (!addBtn) return;
+      this._navigateToAddIntegration();
+    });
+  }
+
+  _navigateToAddIntegration() {
+    const path = "/config/integrations/dashboard/add?domain=vertragsmanager";
+    history.pushState(null, "", path);
+    window.dispatchEvent(new CustomEvent("location-changed", { bubbles: true, composed: true }));
   }
 
   _escapeHtml(value) {
@@ -120,16 +134,18 @@ class VertragsmanagerPanel extends HTMLElement {
     return String(name || "").replace(/\s*Kündigungsfrist\s*$/i, "").replace(/\s*Frist\s*$/i, "").trim();
   }
 
-  _contractKeyFromInput(raw) {
-    return String(raw || "").trim().toLowerCase().replace(/[^a-z0-9äöüß]+/gi, "_").replace(/^_+|_+$/g, "");
-  }
-
   _isPrimaryContractSensor(state) {
-    return state.entity_id.startsWith("sensor.vertragsmanager_") && state.entity_id.endsWith("_frist") && state.attributes.deadline_date;
+    return (
+      state.entity_id.startsWith("sensor.") &&
+      /(_frist|_kundigungsfrist|_kündigungsfrist)$/i.test(state.entity_id) &&
+      state.attributes.deadline_date
+    );
   }
 
   _contractKeyFromState(state) {
-    return state.entity_id.replace(/^sensor\.vertragsmanager_/, "").replace(/_frist$/, "");
+    return state.entity_id
+      .replace(/^sensor\./, "")
+      .replace(/(_kundigungsfrist|_kündigungsfrist|_frist)$/i, "");
   }
 
   _deviceNameFromState(state) {
@@ -141,18 +157,28 @@ class VertragsmanagerPanel extends HTMLElement {
   }
 
   contracts() {
-    return Object.values(this._hass.states)
-      .filter((state) => this._isPrimaryContractSensor(state))
+    const sensors = Object.values(this._hass.states)
+      .filter((state) => this._isPrimaryContractSensor(state));
+    if (!sensors.length) {
+      console.log(
+        "[Vertragsmanager] Keine Vertrags-Sensoren in hass.states gefunden.",
+        "Sensor-IDs vorhanden:",
+        Object.keys(this._hass.states).filter((id) => id.startsWith("sensor.")).slice(0, 20)
+      );
+    } else {
+      console.log("[Vertragsmanager] Vertrags-Sensoren gefunden:", sensors.map((s) => s.entity_id));
+    }
+    return sensors
       .map((state) => {
         const contractKey = this._contractKeyFromState(state);
         const monthly = this._findMonthlyState(contractKey);
         return {
           entity_id: state.entity_id,
           key: contractKey,
-          name: this._displayName(this._deviceNameFromState(state)),
-          provider: state.attributes.provider || "",
-          category: state.attributes.category || "",
-          monthlyCost: Number(monthly?.state || 0),
+          name: this._escapeHtml(this._displayName(this._deviceNameFromState(state))),
+          provider: this._escapeHtml(state.attributes.provider || ""),
+          category: this._escapeHtml(state.attributes.category || ""),
+          monthlyCost: Number(state.attributes.monthly_cost ?? monthly?.state ?? 0),
           deadlineDays: Number(state.state || 0),
           deadlineDate: state.attributes.deadline_date || "",
           renewalDate: state.attributes.next_renewal || "",
@@ -309,7 +335,7 @@ class VertragsmanagerPanel extends HTMLElement {
       <div class="card">
         <h3>Vertrag / HUB hinzufügen</h3>
         <p class="hint">Öffnet den Home-Assistant-Setup-Assistenten für Vertragsmanager.</p>
-        <a href="https://my.home-assistant.io/redirect/config_flow_start/?domain=vertragsmanager" target="_blank" rel="noopener noreferrer" style="display:inline-block;padding:10px 14px;border-radius:10px;background:var(--primary-color);color:white;text-decoration:none;">Hinzufügen</a>
+        <button id="add-btn" style="padding:10px 14px;border-radius:10px;background:var(--primary-color);color:white;border:none;cursor:pointer;">Hinzufügen</button>
       </div>
     `;
     this.querySelector("#content").innerHTML = content;
@@ -319,3 +345,4 @@ class VertragsmanagerPanel extends HTMLElement {
 if (!customElements.get("vertragsmanager-panel")) {
   customElements.define("vertragsmanager-panel", VertragsmanagerPanel);
 }
+})();

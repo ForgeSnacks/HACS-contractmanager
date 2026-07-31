@@ -3,13 +3,19 @@ from __future__ import annotations
 
 from custom_components.vertragsmanager.sensor import (
     GesamtkostenSensorEntity,
-    VertragSensorEntity,
+    VertragLaufzeitSensorEntity,
+    VertragPreisProMonatSensorEntity,
+    VertragBereitsGezahltSensorEntity,
+    VertragNochZuZahlenSensorEntity,
 )
 
 
 def test_sensor_classes_exist() -> None:
     """Test that sensor classes exist."""
-    assert VertragSensorEntity is not None
+    assert VertragLaufzeitSensorEntity is not None
+    assert VertragPreisProMonatSensorEntity is not None
+    assert VertragBereitsGezahltSensorEntity is not None
+    assert VertragNochZuZahlenSensorEntity is not None
     assert GesamtkostenSensorEntity is not None
 
 
